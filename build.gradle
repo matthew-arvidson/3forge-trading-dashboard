@@ -1,0 +1,453 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.forge'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// TODO: Fix Java warnings and remove these suppressions
+compileJava {
+    options.compilerArgs += [
+        '-Xlint:none',           // Disable all linting warnings
+        '-nowarn'                // Suppress all warnings
+    ]
+    options.encoding = 'UTF-8'   // Fix encoding issues
+    options.deprecation = false  // Don't show deprecation warnings
+}
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    // Use the actual 3forge JAR files for compilation
+    compileOnly files('libs/out.jar')
+    compileOnly files('libs/autocode.jar')
+}
+
+// ==============================================================================
+// BACKUP & RECOVERY SYSTEM
+// ==============================================================================
+
+/**
+ * Creates a master backup of current 3forge working state
+ * 
+ * @description Backs up only essential working state (~2.6MB vs 104MB full install):
+ *              - config/ (AMI configurations)
+ *              - data/ (data source configurations) 
+ *              - custom JARs (our trading-dashboard.jar)
+ *              - licenses and VM options
+ * 
+ * @usage gradle backupWorkingState
+ * @when After major milestones when everything works perfectly
+ * @replaces Previous backup (single master backup approach)
+ */
+task backupWorkingState {
+    doLast {
+        def backupDir = new File(project.projectDir, "config/working-state-backup")
+        
+        // Remove existing backup and create fresh one
+        if (backupDir.exists()) {
+            backupDir.deleteDir()
+        }
+        backupDir.mkdirs()
+        
+        def amiRoot = new File('C:/Program Files/ami/amione')
+        
+        // Backup config directory (small, critical)
+        def configDir = new File(amiRoot, 'config')
+        if (configDir.exists()) {
+            copy {
+                from configDir
+                into new File(backupDir, 'config')
+            }
+            println "📋 Backed up config directory"
+        }
+        
+        // Backup data directory (contains data source configurations!)
+        def dataDir = new File(amiRoot, 'data')
+        if (dataDir.exists()) {
+            copy {
+                from dataDir
+                into new File(backupDir, 'data')
+            }
+            println "🗄️ Backed up data directory (data sources, schemas)"
+        }
+        
+        // Backup only our custom JARs from lib
+        def libDir = new File(amiRoot, 'lib')
+        if (libDir.exists()) {
+            def customLibDir = new File(backupDir, 'lib')
+            customLibDir.mkdirs()
+            
+            // Only backup JARs that match our naming pattern
+            libDir.listFiles().each { file ->
+                if (file.name.startsWith('3forge-') || file.name.contains('trading-dashboard')) {
+                    copy {
+                        from file
+                        into customLibDir
+                    }
+                    println "📦 Backed up custom JAR: ${file.name}"
+                }
+            }
+        }
+        
+        // Backup license and key files
+        ['f1license.txt', 'dashboard poc'].each { filename ->
+            def file = new File(amiRoot, filename)
+            if (file.exists()) {
+                copy {
+                    from file
+                    into backupDir
+                }
+                println "🔑 Backed up: ${filename}"
+            }
+        }
+        
+        def timestamp = new Date().format('yyyy-MM-dd HH:mm:ss')
+        
+        println ""
+        println "💾 Master backup completed: ${backupDir.absolutePath}"
+        println "📅 Snapshot time: ${timestamp}"
+        println "📊 Backup includes: config, data sources, custom JARs, licenses"
+        def backupSize = backupDir.exists() ? (backupDir.directorySize() / 1024).round(1) : 0
+        def fullSize = amiRoot.exists() ? (amiRoot.directorySize() / 1024 / 1024).round(1) : 0
+        println "📊 Backup size: ~${backupSize} KB (vs ${fullSize} MB full install)"
+        println ""
+        println "💡 Use 'gradle restoreWorkingState' to restore this backup"
+    }
+}
+
+/**
+ * Restores from master backup (nuclear recovery option)
+ * 
+ * @description Complete working state recovery from master backup.
+ *              Restores config, data sources, custom JARs, licenses.
+ *              Use when something breaks and you need to get back to working state.
+ * 
+ * @usage gradle restoreWorkingState
+ * @when Configuration corruption, failed deployments, need to revert changes
+ * @requires Master backup exists (run backupWorkingState first)
+ */
+task restoreWorkingState {
+    doLast {
+        def backupDir = new File(project.projectDir, 'config/working-state-backup')
+        if (!backupDir.exists()) {
+            println "❌ No working state backup found. Run 'gradle backupWorkingState' first."
+            return
+        }
+        
+        println "🔄 Restoring from master backup..."
+        
+        def amiRoot = new File('C:/Program Files/ami/amione')
+        
+        // Restore config
+        def configBackup = new File(backupDir, 'config')
+        if (configBackup.exists()) {
+            copy {
+                from configBackup
+                into new File(amiRoot, 'config')
+            }
+            println "📋 Restored config directory"
+        }
+        
+        // Restore data directory (data sources!)
+        def dataBackup = new File(backupDir, 'data')
+        if (dataBackup.exists()) {
+            copy {
+                from dataBackup
+                into new File(amiRoot, 'data')
+            }
+            println "🗄️ Restored data directory (data sources restored!)"
+        }
+        
+        // Restore custom JARs
+        def libBackup = new File(backupDir, 'lib')
+        if (libBackup.exists()) {
+            copy {
+                from libBackup
+                into new File(amiRoot, 'lib')
+            }
+            println "📦 Restored custom JARs"
+        }
+        
+        // Restore key files
+        ['f1license.txt', 'dashboard poc'].each { filename ->
+            def backupFile = new File(backupDir, filename)
+            if (backupFile.exists()) {
+                copy {
+                    from backupFile
+                    into amiRoot
+                }
+                println "🔑 Restored: ${filename}"
+            }
+        }
+        
+        println "✅ Working state restored!"
+        println "🔄 Restart 3forge to apply changes"
+        println "💡 You are now back to your last known working state"
+    }
+}
+
+// ==============================================================================
+// DEPLOYMENT SYSTEM
+// ==============================================================================
+
+/**
+ * Deploys configuration files to 3forge installation
+ * 
+ * @description Copies ami-custom.properties to 3forge config directory.
+ *              This file contains custom Java class registrations needed
+ *              for table clicking and inter-widget communication.
+ * 
+ * @usage Used internally by buildProd/buildDev tasks
+ * @deploys config/ami-custom.properties -> C:/Program Files/ami/amione/config/
+ */
+task deployConfig {
+    doLast {
+        def amiConfigDir = new File('C:/Program Files/ami/amione/config')
+        
+        // Deploy custom properties with class registrations
+        def customConfig = new File('config/ami-custom.properties')
+        if (customConfig.exists()) {
+            copy {
+                from customConfig
+                into amiConfigDir
+            }
+            println "📋 Deployed ami-custom.properties with class registrations"
+        }
+    }
+}
+
+/**
+ * Deploys compiled JAR to 3forge lib directory
+ * 
+ * @description Copies the compiled trading-dashboard.jar containing
+ *              TradingDashboardManager and other custom classes to 3forge.
+ *              Required for table clicking and HTML panel generation.
+ * 
+ * @usage Used internally by buildProd/buildDev tasks  
+ * @deploys build/libs/trading-dashboard.jar -> C:/Program Files/ami/amione/lib/
+ */
+task deploy(dependsOn: [jar, deployConfig]) {
+    doLast {
+        def sourceJar = jar.outputs.files.singleFile
+        def targetDir = new File('C:/Program Files/ami/amione/lib')
+        def targetJar = new File(targetDir, 'trading-dashboard.jar')
+        
+        println "Deploying ${sourceJar.name} to ${targetJar.absolutePath}"
+        
+        // Ensure target directory exists
+        targetDir.mkdirs()
+        
+        // Copy the JAR
+        targetJar.bytes = sourceJar.bytes
+        
+        println "✅ JAR deployed successfully!"
+        println "✅ Configuration deployed successfully!"
+        println ""
+        println "🔄 Next steps:"
+        println "   1. Restart 3forge to load new classes"
+        println "   2. Use: .\\scripts\\rebuild-prod.ps1"
+        println "   3. Test trader clicking in dashboard"
+        println ""
+        println "💡 TIP: Run 'gradle backupWorkingState' after confirming everything works"
+    }
+}
+
+// ==============================================================================
+// BUILD SYSTEM - Production & Development
+// ==============================================================================
+
+/**
+ * Production build - standard deployment labeled for production use
+ * 
+ * @description Complete deployment (identical to buildDev):
+ *              - Compiles Java classes to JAR
+ *              - Deploys custom class configurations  
+ *              - Uses 3forge default VM options
+ * 
+ * @usage gradle buildProd
+ * @when You want to indicate production intent (same as buildDev functionally)
+ * @outputs trading-dashboard.jar + ami-custom.properties deployed to 3forge
+ * @note Currently identical to buildDev - differentiation is aspirational
+ */
+task buildProd(dependsOn: [clean, jar, deploy]) {
+    doFirst {
+        println "🚀 PRODUCTION BUILD STARTING..."
+        println "🛡️ Using 3forge default VM options (safe - no custom settings)"
+    }
+    
+    doLast {
+        println ""
+        println "🚀 PRODUCTION BUILD COMPLETE!"
+        println "📦 Standard deployment with production labeling"
+        println "🔄 Next: Use scripts\\rebuild-prod.ps1 to restart 3forge"
+        println ""
+    }
+}
+
+/**
+ * Development build - standard deployment labeled for development use
+ * 
+ * @description Complete deployment (identical to buildProd):
+ *              - Compiles Java classes to JAR
+ *              - Deploys custom class configurations
+ *              - Uses 3forge default VM options
+ * 
+ * @usage gradle buildDev
+ * @when Active development (functionally same as buildProd)
+ * @note Currently identical to buildProd - differentiation is aspirational  
+ * @note Remote debugging depends on 3forge configuration, not this task
+ * @todo Remote debugging not working - consider this task unnecessary for now
+ * @todo Use gradle buildProd instead - same functionality, clearer intent
+ * @todo Consider removing dev-specific scripts in future cleanup
+ */
+task buildDev(dependsOn: [clean, jar, deploy]) {
+    doFirst {
+        println "🔧 DEVELOPMENT BUILD STARTING..."
+        println "🐛 Using 3forge default VM options (safe - no custom debug settings)"
+    }
+    
+    doLast {
+        println ""
+        println "🔧 DEVELOPMENT BUILD COMPLETE!"
+        println "📦 Standard deployment with development labeling"
+        println "🔄 Next: Use scripts\\rebuild-dev.ps1 to restart 3forge"
+        println "💡 Note: 3forge has built-in IDE - external debugging may not be needed"
+        println ""
+    }
+}
+
+/**
+ * Default build alias - points to development build
+ * 
+ * @description Maintains backward compatibility with existing scripts
+ * @usage gradle rebuild
+ * @alias gradle buildDev
+ */
+task rebuild(dependsOn: buildDev) {
+    doLast {
+        println "💡 TIP: Use 'gradle buildProd' for production builds"
+    }
+}
+
+// ==============================================================================
+// JAR CONFIGURATION
+// ==============================================================================
+
+/**
+ * JAR compilation settings
+ * 
+ * @description Configures the output JAR with proper manifest and naming.
+ *              Contains TradingDashboardManager and other custom classes
+ *              needed for 4-panel inter-widget communication.
+ */
+jar {
+    archiveFileName = 'trading-dashboard.jar'
+    
+    manifest {
+        attributes(
+            'Implementation-Title': 'Trading Dashboard Custom Classes',
+            'Implementation-Version': version,
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date().toString()
+        )
+    }
+}
+
+// ==============================================================================
+// LEGACY TASKS (Kept for compatibility - consider removing in future cleanup)
+// ==============================================================================
+
+/**
+ * LEGACY: Creates timestamped backup of AMI config
+ * 
+ * @deprecated Use backupWorkingState instead for complete backup
+ * @description Creates timestamped backup in config/ami-backups/
+ * @usage gradle backupConfig
+ * @todo Consider removing - replaced by master backup system
+ */
+task backupConfig {
+    doLast {
+        def timestamp = new Date().format('yyyyMMdd_HHmmss')
+        def backupDir = new File("config/ami-backups/${timestamp}")
+        backupDir.mkdirs()
+        
+        def amiConfigDir = new File('C:/Program Files/ami/amione/config')
+        if (amiConfigDir.exists()) {
+            copy {
+                from amiConfigDir
+                into backupDir
+            }
+            println "📦 AMI config backed up to: ${backupDir.absolutePath}"
+        }
+    }
+}
+
+/**
+ * LEGACY: Restores config from baseline
+ * 
+ * @deprecated Consider removing - rarely used
+ * @description Restores clean baseline config, backs up current first
+ * @usage gradle restoreConfig
+ * @todo Evaluate if needed - master backup system is primary recovery method
+ */
+task restoreConfig {
+    doLast {
+        def baselineDir = new File('config/ami-baseline')
+        def amiConfigDir = new File('C:/Program Files/ami/amione/config')
+        
+        if (baselineDir.exists()) {
+            // First backup current config
+            def timestamp = new Date().format('yyyyMMdd_HHmmss')
+            def backupDir = new File("config/ami-backups/pre-restore-${timestamp}")
+            backupDir.mkdirs()
+            
+            copy {
+                from amiConfigDir
+                into backupDir
+            }
+            
+            // Restore baseline
+            copy {
+                from baselineDir
+                into amiConfigDir
+            }
+            
+            println "🔄 Restored AMI config from baseline"
+            println "💾 Previous config backed up to: ${backupDir.absolutePath}"
+        }
+    }
+}
+
+/**
+ * LEGACY: Clean removal of deployed files
+ * 
+ * @description Removes deployed JAR and config files from 3forge installation
+ * @usage gradle cleanDeploy
+ * @when Need to completely remove custom classes
+ */
+task cleanDeploy {
+    doLast {
+        def targetJar = new File('C:/Program Files/ami/amione/lib/trading-dashboard.jar')
+        if (targetJar.exists()) {
+            targetJar.delete()
+            println "🗑️ Removed deployed JAR"
+        }
+        
+        def customConfig = new File('C:/Program Files/ami/amione/config/ami-custom.properties')
+        if (customConfig.exists()) {
+            customConfig.delete()
+            println "🗑️ Removed custom configuration"
+        }
+    }
+} 

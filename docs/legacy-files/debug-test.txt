@@ -1,0 +1,84 @@
+SAFE DEBUG TEST - Add this to your 3forge.json AMI script
+
+=== OPTION 1: Add a debug button/callback ===
+
+Add this somewhere in your AMI script callbacks (perhaps as an onLoad or create a debug button):
+
+function debugHtmlPanel() {
+    try {
+        session.log("=== STARTING HTML PANEL DEBUG ===");
+        
+        // Test if our custom class is accessible
+        String debugInfo = TradingDashboardManager.debugHtmlPanel("htmlTemplate2", layout);
+        session.log(debugInfo);
+        
+        session.log("=== HTML PANEL DEBUG COMPLETE ===");
+        
+    } catch (Exception e) {
+        session.log("DEBUG ERROR: " + e.getMessage());
+        session.log("Error class: " + e.getClass().getName());
+    }
+}
+
+=== OPTION 2: Add to existing onCellClicked (safer) ===
+
+In your existing onCellClicked callback, add this at the very beginning:
+
+// DEBUG: Add this as the first line in your onCellClicked function
+if (column == "DEBUG") {
+    try {
+        String debugInfo = TradingDashboardManager.debugHtmlPanel("htmlTemplate2", layout);
+        session.log(debugInfo);
+        return; // Exit early for debug
+    } catch (Exception e) {
+        session.log("DEBUG ERROR: " + e.getMessage());
+        return;
+    }
+}
+
+=== OPTION 3: Simple class test ===
+
+Add this minimal test to see if the class loads:
+
+function testClassAccess() {
+    try {
+        session.log("Testing TradingDashboardManager access...");
+        String result = TradingDashboardManager.debugHtmlPanel("htmlTemplate2", layout);
+        session.log("SUCCESS: Class accessible");
+        session.log("Debug result length: " + result.length());
+    } catch (Exception e) {
+        session.log("FAILED: " + e.getMessage());
+    }
+}
+
+=== HOW TO TEST ===
+
+1. **Add one of the above options** to your 3forge.json
+2. **Restart 3forge** completely (close AMI_One.exe, reopen)
+3. **Load your dashboard**
+4. **Trigger the debug**:
+   - Option 1: Call debugHtmlPanel() 
+   - Option 2: Click a cell with "DEBUG" in any column
+   - Option 3: Call testClassAccess()
+
+=== WHAT TO LOOK FOR ===
+
+**SUCCESS - You should see:**
+- "=== STARTING HTML PANEL DEBUG ===" 
+- Panel Class: [some 3forge class name]
+- Available Methods: [list of methods like setValue, setHtmlTemplate, etc.]
+- Current panel content information
+
+**FAILURE - You might see:**
+- "Class not found" or similar
+- "Method not found" 
+- Permission/access errors
+
+=== NEXT STEPS AFTER DEBUG ===
+
+Once we see what methods are actually available on the HTML panel, we can:
+1. Choose the right method to update the panel content
+2. Test a simple content update
+3. Then implement the full trader metrics functionality
+
+This approach is much safer than trying to update the panel before we know what's available! 

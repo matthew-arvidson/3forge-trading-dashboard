@@ -1,0 +1,46 @@
+"onCellClicked": "function onCellClicked(table, row, column, value) {
+    session.log(\"Cell clicked - Column: \" + column + \", Value: \" + value);
+    
+    if (column == \"Trader\") {
+        String selectedTrader = value;
+        session.log(\"Selected trader: \" + selectedTrader);
+        
+        // EXISTING: Update P&L chart (this continues to work)
+        Map filterParams = new Map();
+        filterParams.put(\"WHERE\", \"trader = '\" + selectedTrader + \"'\");
+        layout.getDatamodel(\"trades3\").process(filterParams);
+        
+        // NEW: Update HTML panel using custom Java class
+        try {
+            boolean success = TradingDashboardManager.updateTraderMetrics(selectedTrader, layout);
+            if (success) {
+                session.log(\"Successfully updated trader metrics panel\");
+            } else {
+                session.log(\"Failed to update trader metrics panel\");
+            }
+        } catch (Exception e) {
+            session.log(\"Error calling TradingDashboardManager: \" + e.getMessage());
+        }
+        
+    } else {
+        // Reset to show all data
+        session.log(\"Resetting to show all traders\");
+        
+        // EXISTING: Reset chart filter
+        Map resetParams = new Map();
+        resetParams.put(\"WHERE\", \"1=1\");
+        layout.getDatamodel(\"trades3\").process(resetParams);
+        
+        // NEW: Reset HTML panel using custom Java class
+        try {
+            boolean success = TradingDashboardManager.resetDashboard(layout);
+            if (success) {
+                session.log(\"Successfully reset dashboard\");
+            } else {
+                session.log(\"Failed to reset dashboard\");
+            }
+        } catch (Exception e) {
+            session.log(\"Error calling TradingDashboardManager: \" + e.getMessage());
+        }
+    }
+}" 

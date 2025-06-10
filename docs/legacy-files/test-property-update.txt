@@ -1,0 +1,50 @@
+// === SAFE TEST FOR HTML PANEL PROPERTY UPDATE ===
+// Add this to your existing onCellClicked function for testing
+
+if (column == "Trader") {
+    String selectedTrader = value;
+    session.log("Testing property-based HTML panel update for: " + selectedTrader);
+    
+    // EXISTING: Your chart update (keep this working!)
+    Map filterParams = new Map();
+    filterParams.put("WHERE", "trader = '" + selectedTrader + "'");
+    layout.getDatamodel("trades3").process(filterParams);
+    
+    // NEW TEST: Try property-based HTML panel update
+    try {
+        // Test 1: Generate test HTML
+        String htmlResult = TradingDashboardManager.testHtmlTemplateUpdate(selectedTrader);
+        session.log("HTML Generation: " + htmlResult);
+        
+        // Test 2: Try to update the panel property  
+        String updateResult = TradingDashboardManager.updatePanelProperty("Html1", "htmlTemplate2", "<div style='background: #d4edda; padding: 20px; text-align: center;'><h2>✅ " + selectedTrader + " Selected!</h2><p>Property update test working</p></div>", layout);
+        session.log("Panel Update: " + updateResult);
+        
+        if (updateResult.startsWith("SUCCESS")) {
+            session.alert("🎉 SUCCESS: HTML panel updated via property!");
+        } else {
+            session.alert("ℹ️ INFO: " + updateResult);
+        }
+        
+    } catch (Exception e) {
+        session.log("Property update test error: " + e.getMessage());
+    }
+    
+} else {
+    // Reset functionality (keep your existing reset code)
+    session.log("Resetting to show all traders");
+    Map resetParams = new Map();
+    resetParams.put("WHERE", "1=1");
+    layout.getDatamodel("trades3").process(resetParams);
+}
+
+// === WHAT TO LOOK FOR ===
+// 1. Check AMI logs for "HTML Generation:" and "Panel Update:" messages
+// 2. If you see "SUCCESS: Updated Html1.htmlTemplate2" - WE FOUND IT! 
+// 3. If you see "FAILED:" - check the available setters listed
+// 4. If panel doesn't visually update but method succeeds, we may need a refresh call
+
+// === NEXT STEPS BASED ON RESULTS ===
+// SUCCESS + Visual Update: We can implement full trader metrics!
+// SUCCESS + No Visual Update: Need to find panel refresh method
+// FAILED: Try the Custom GUI Service approach from documentation 

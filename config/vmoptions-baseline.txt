@@ -1,0 +1,5 @@
+# 3forge AMI One - Baseline VM Options
+# Clean production-ready configuration without debug flags
+-Xmx2g
+-Xms512m
+-XX:+UseG1GC 

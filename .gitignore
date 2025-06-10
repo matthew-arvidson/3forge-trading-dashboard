@@ -1,0 +1,70 @@
+# Java/Gradle Build Files
+build/
+.gradle/
+*.class
+*.jar
+!libs/*.jar
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# IDE Files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local Configuration (contains local paths)
+local.properties
+
+# 3forge Temporary/Cache Files
+*.log
+*.tmp
+temp/
+logs/
+
+# Database Files (remove this line if you want to commit sample data)
+*.sqlite
+*.db
+
+# Output/Generated Files
+out/
+target/
+*.war
+*.ear
+*.nar
+
+# Java Memory Dumps
+*.hprof
+
+# Maven (if you ever use it)
+.m2/
+
+# Backup Files
+*.bak
+*.backup
+*.orig
+
+# Environment/Secret Files
+.env
+*.key
+*.pem
+
+# Testing
+.coverage
+coverage/
+
+# Local Development
+scratch/
+test-output/

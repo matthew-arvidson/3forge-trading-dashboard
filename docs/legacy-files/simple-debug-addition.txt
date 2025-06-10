@@ -1,0 +1,25 @@
+SIMPLE DEBUG - Add this to your existing onCellClicked function
+
+Just add these lines at the very beginning of your current onCellClicked function:
+
+// === ADD THIS TO THE START OF YOUR EXISTING onCellClicked ===
+function onCellClicked(table, row, column, value) {
+    session.log("Cell clicked - Column: " + column + ", Value: " + value);
+    
+    // DEBUG: Test our custom class and inspect HTML panel
+    try {
+        String debugInfo = TradingDashboardManager.debugHtmlPanel("htmlTemplate2", layout);
+        session.log("HTML PANEL DEBUG: " + debugInfo);
+    } catch (Exception e) {
+        session.log("DEBUG ERROR: " + e.getMessage());
+    }
+    
+    // ... rest of your existing onCellClicked code stays the same ...
+}
+
+That's it! Now every time you click any cell, you'll get:
+1. Your normal cell click behavior 
+2. Complete debug information about the HTML panel
+3. Any errors if the class isn't loading properly
+
+Much cleaner and immediate testing! 

@@ -1,0 +1,12 @@
+-Dproperty.ami.launch.mode=windows
+-Df1.license.mode=dev
+-Dproperty.f1.conf.dir=config/
+-Djava.util.logging.manager=com.f1.speedlogger.sun.SunSpeedLoggerLogManager
+-Dlog4j.configuratorClass=com.f1.speedloggerLog4j.Log4jSpeedLoggerManager
+-Dlog4j.configuration=com/f1/speedloggerLog4j/Log4jSpeedLoggerManager.class
+-Dfile.encoding=UTF-8
+-Dproperty.f1.logging.mode=
+-XX:+UseConcMarkSweepGC
+-Dshowsplash=true
+-Dproperty.ami.login.default.user=demo
+-Dproperty.ami.login.default.pass=demo123

@@ -1,0 +1,7 @@
+# 3forge AMI One - Production VM Options
+# Optimized for production use - NO DEBUG FLAGS for security
+-Xmx4g
+-Xms1g  
+-XX:+UseG1GC
+-XX:+DisableExplicitGC
+-XX:+UseCompressedOops 

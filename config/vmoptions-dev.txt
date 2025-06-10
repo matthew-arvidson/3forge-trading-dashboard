@@ -1,0 +1,6 @@
+# 3forge AMI One - Development VM Options  
+# Includes remote debugging support for development
+-Xmx2g
+-Xms512m
+-XX:+UseG1GC
+-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 
