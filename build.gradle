@@ -228,6 +228,41 @@ task deployConfig {
 }
 
 /**
+ * Deploys JavaScript resources to 3forge resources directory
+ * 
+ * @description Copies JavaScript files needed for AI chat functionality
+ *              to 3forge resources directory for web GUI service plugins.
+ * 
+ * @usage Used internally by buildProd/buildDev tasks
+ * @deploys resources/*.js -> C:/Program Files/ami/amione/resources/
+ */
+task deployResources {
+    doLast {
+        def resourcesDir = new File(project.projectDir, 'resources')
+        def targetDir = new File('C:/Program Files/ami/amione/resources')
+        
+        if (resourcesDir.exists()) {
+            // Ensure target directory exists
+            targetDir.mkdirs()
+            
+            // Copy all JavaScript files
+            resourcesDir.listFiles().each { file ->
+                if (file.name.endsWith('.js')) {
+                    copy {
+                        from file
+                        into targetDir
+                    }
+                    println "📄 Deployed JavaScript resource: ${file.name}"
+                }
+            }
+            println "✅ JavaScript resources deployed successfully!"
+        } else {
+            println "📁 No resources directory found - skipping resource deployment"
+        }
+    }
+}
+
+/**
  * Deploys compiled JAR to 3forge lib directory
  * 
  * @description Copies the compiled trading-dashboard.jar containing
@@ -237,7 +272,7 @@ task deployConfig {
  * @usage Used internally by buildProd/buildDev tasks  
  * @deploys build/libs/trading-dashboard.jar -> C:/Program Files/ami/amione/lib/
  */
-task deploy(dependsOn: [jar, deployConfig]) {
+task deploy(dependsOn: [jar, deployConfig, deployResources]) {
     doLast {
         def sourceJar = jar.outputs.files.singleFile
         def targetDir = new File('C:/Program Files/ami/amione/lib')
