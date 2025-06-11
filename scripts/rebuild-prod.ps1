@@ -13,8 +13,15 @@ gradle buildProd
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Starting 3forge..." -ForegroundColor Green
+    
+    # Save current directory before changing
+    $originalDir = Get-Location
+    
     Set-Location "C:\Program Files\ami\amione"
     Start-Process -FilePath ".\AMI_One.exe" -WindowStyle Normal
+    
+    # Return to original directory
+    Set-Location $originalDir
     
     Write-Host "Done! Dashboard should be ready at:" -ForegroundColor Green
     Write-Host "   http://localhost:33332/3forge" -ForegroundColor White

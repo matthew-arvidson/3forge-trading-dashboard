@@ -5,6 +5,9 @@ import com.f1.ami.amicommon.customobjects.AmiScriptAccessible;
 @AmiScriptAccessible(name = "TradingDashboardManager")
 public class TradingDashboardManager {
     
+    // Static chatbot instance for delegation (dumb component)
+    private static TradingAiChatbot chatbot = new TradingAiChatbot();
+    
     @AmiScriptAccessible
     public TradingDashboardManager() {
         // Default constructor
@@ -15,24 +18,16 @@ public class TradingDashboardManager {
         try {
             String traderName = trader.toString();
             
-            // DISCOVER: What's actually available in AMI script context
-            Class<?> layoutClass = layout.getClass();
-            String className = layoutClass.getSimpleName();
+            // Generate trader HTML
+            String traderHtml = generateTraderHtml(traderName);
             
-            // List some actual methods available
-            java.lang.reflect.Method[] methods = layoutClass.getMethods();
-            StringBuilder methodsList = new StringBuilder();
-            int count = 0;
-            for (java.lang.reflect.Method method : methods) {
-                if (count < 5 && !method.getName().startsWith("get") && !method.getName().equals("toString")) {
-                    methodsList.append(method.getName()).append(" ");
-                    count++;
-                }
-            }
+            // Update the HTML panel
+            updateHtmlPanel(layout, traderHtml);
             
-            return "Layout=" + className + " Methods=" + methodsList.toString();
+            return "SUCCESS: Updated HTML panel for " + traderName;
+            
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return "ERROR: " + e.getMessage();
         }
     }
     
@@ -186,7 +181,7 @@ public class TradingDashboardManager {
             "        height: 35%%;\n" +
             "    }\n" +
             "    \n" +
-            "    .card-1 { top: 15%%; left: 2.5%%; border-left-color: %s; }\n" +
+            "    .card-1 { top: 15%%; left: 2.5%%; border-left-color: #007bff; }\n" +
             "    .card-2 { top: 15%%; right: 2.5%%; }\n" +
             "    .card-3 { bottom: 10%%; left: 2.5%%; border-left-color: #dc3545; }\n" +
             "    .card-4 { bottom: 10%%; right: 2.5%%; border-left-color: #28a745; }\n" +
@@ -241,7 +236,6 @@ public class TradingDashboardManager {
             "        <div class=\"metric-value\">%.1f%%</div>\n" +
             "    </div>\n" +
             "</div>",
-            metrics.totalPnl >= 0 ? "#28a745" : "#dc3545",  // Card border color
             metrics.traderName.toUpperCase(),                // Trader name
             pnlClass,                                        // CSS class
             pnlSign,                                         // + or - sign
@@ -398,6 +392,143 @@ public class TradingDashboardManager {
             return "HTML Preview for " + traderName + ": " + preview;
         } catch (Exception e) {
             return "Error generating HTML preview: " + e.getMessage();
+        }
+    }
+    
+    // ========================================================================
+    // CHAT FUNCTIONALITY - Added to working TradingDashboardManager
+    // ========================================================================
+    
+    @AmiScriptAccessible(name = "processChatMessage", params = {"userMessage"})
+    public String processChatMessage(Object userMessage) {
+        // Delegate to chatbot instance
+        return chatbot.processChatMessage(userMessage);
+    }
+    
+    @AmiScriptAccessible(name = "chatTest")
+    public String chatTest() {
+        // Delegate to chatbot (dumb component utility)
+        return chatbot.chatTest();
+    }
+    
+
+    
+    // Simple chat - just current exchange (no complex history)
+    @AmiScriptAccessible(name = "generateChatHtml", params = {"userInput", "chatResponse"})
+    public String generateChatHtml(Object userInput, Object chatResponse) {
+        // Delegate to chatbot
+        return chatbot.generateChatHtml(userInput, chatResponse);
+    }
+    
+    @AmiScriptAccessible(name = "getChatHistory")
+    public String getChatHistory() {
+        // Delegate to chatbot (dumb component utility)
+        return chatbot.getChatHistory();
+    }
+    
+    @AmiScriptAccessible(name = "clearChatHistory")
+    public String clearChatHistory() {
+        // Delegate to chatbot (dumb component utility)
+        return chatbot.clearChatHistory();
+    }
+    
+    @AmiScriptAccessible(name = "processChatCommand", params = {"chatResponse", "layout"})
+    public String processChatCommand(Object chatResponse, Object layout) {
+        try {
+            String jsonResponse = chatResponse.toString();
+            
+            // Use chatbot for JSON parsing (dumb component utility)
+            String command = chatbot.extractJsonField(jsonResponse, "command");
+            String trader = chatbot.extractJsonField(jsonResponse, "trader");
+            
+            String layoutInfo = (layout != null ? layout.getClass().getSimpleName() : "null");
+            
+            // Handle business logic here (smart component decisions)
+            if ("FILTER_TRADER".equals(command) && trader != null && !trader.isEmpty()) {
+                // Execute the trader filter using our existing method
+                String result = updateTraderMetrics(trader, layout);
+                
+                return String.format("FILTER_TRADER executed | Trader: %s | Layout: %s | Result: %s", 
+                    trader, layoutInfo, result);
+                
+            } else if ("RESET_DASHBOARD".equals(command)) {
+                // Execute dashboard reset using our existing method
+                String result = resetDashboard(layout);
+                
+                return String.format("RESET_DASHBOARD executed | Layout: %s | Result: %s", 
+                    layoutInfo, result);
+                
+            } else {
+                return String.format("No command found | Command: %s | Trader: %s | Layout: %s", 
+                    command, trader, layoutInfo);
+            }
+            
+        } catch (Exception e) {
+            return "ERROR in processChatCommand: " + e.getMessage();
+        }
+    }
+    
+    @AmiScriptAccessible(name = "extractMessageFromJson", params = {"jsonResponse"})
+    public String extractMessageFromJson(String jsonResponse) {
+        // Delegate to chatbot (dumb component utility)
+        return chatbot.extractMessageFromJson(jsonResponse);
+    }
+    
+    @AmiScriptAccessible(name = "extractJsonField", params = {"jsonResponse", "fieldName"})
+    public String extractJsonField(String jsonResponse, String fieldName) {
+        // Delegate to chatbot (dumb component utility)
+        return chatbot.extractJsonField(jsonResponse, fieldName);
+    }
+    
+    @AmiScriptAccessible(name = "debugLayoutAccess", params = {"layout"})
+    public String debugLayoutAccess(Object layout) {
+        try {
+            StringBuilder debug = new StringBuilder();
+            
+            // Layout info
+            Class<?> layoutClass = layout.getClass();
+            debug.append("Layout Type: ").append(layoutClass.getSimpleName()).append(" | ");
+            
+            // Try to access HTML panel
+            try {
+                Object htmlPanel = getPanel(layout, "Html1");
+                if (htmlPanel != null) {
+                    debug.append("Html1: Found (").append(htmlPanel.getClass().getSimpleName()).append(") | ");
+                } else {
+                    debug.append("Html1: NULL | ");
+                }
+            } catch (Exception e) {
+                debug.append("Html1: ERROR (").append(e.getMessage()).append(") | ");
+            }
+            
+            // Try to access datamodel 
+            try {
+                java.lang.reflect.Method getDatamodel = layoutClass.getMethod("getDatamodel", String.class);
+                Object dm = getDatamodel.invoke(layout, "Trades");
+                if (dm != null) {
+                    debug.append("Datamodel: Found | ");
+                } else {
+                    debug.append("Datamodel: NULL | ");
+                }
+            } catch (Exception e) {
+                debug.append("Datamodel: ERROR | ");
+            }
+            
+            // List key methods
+            debug.append("Methods: ");
+            java.lang.reflect.Method[] methods = layoutClass.getMethods();
+            int count = 0;
+            for (java.lang.reflect.Method method : methods) {
+                if (count < 3 && (method.getName().contains("Panel") || method.getName().contains("Data"))) {
+                    debug.append(method.getName()).append(" ");
+                    count++;
+                }
+            }
+            
+            return debug.toString();
+            
+        } catch (Exception e) {
+            return "DEBUG ERROR: " + e.getMessage();
         }
     }
 } 
