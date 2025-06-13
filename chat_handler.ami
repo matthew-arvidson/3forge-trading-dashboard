@@ -1,0 +1,146 @@
+// ========================================================================
+// TRADING DASHBOARD CHAT HANDLER - OpenAI Integration
+// ========================================================================
+// This script handles chat input processing, OpenAI API calls, and 
+// dashboard command execution for the trading dashboard.
+//
+// Usage: Attach to text area onEnterKey event
+// Dependencies: TradingDashboardManager, OpenAI_API datasource
+// ========================================================================
+
+// Get the text input value
+String userInput = this.getValue();
+
+// Only process if there's actual input
+if (userInput != null && userInput.trim().length() > 0) {
+    
+    // Create our working manager instance
+    TradingDashboardManager manager = new TradingDashboardManager();
+    
+    // Log for debugging
+    session.log("User input: " + userInput);
+    
+    // Update the current query in manager
+    manager.setCurrentChatQuery(userInput);
+    
+    // Clear the input field
+    this.setValue("");
+    
+    // ====================================================================
+    // PURE OPENAI INTEGRATION - Send ALL queries to OpenAI
+    // ====================================================================
+    session.log("Sending query to OpenAI: " + userInput);
+    
+    // Get AI response from datamodel for ALL queries
+    Datamodel openaiDatamodel = layout.getDatamodel("_127_0_0_1_5000");
+    String aiResponse = null;
+    session.log("Datamodel exists: " + (openaiDatamodel != null));
+    session.log("Datamodel count: " + (openaiDatamodel != null ? openaiDatamodel.getExecutedCount() : "null"));
+    
+    if (openaiDatamodel != null && openaiDatamodel.getExecutedCount() > 0) {
+        openaiDatamodel.process();
+        // Get the TableSet using the correct API method
+        TableSet tableSet = openaiDatamodel.getData();
+        session.log("TableSet retrieved: " + (tableSet != null));
+        
+        if (tableSet != null) {
+            // Get table names to see what's available
+            Set tableNames = tableSet.getNames();
+            session.log("Available table names: " + tableNames);
+            
+            // Get the specific table by name
+            Table openaiTable = tableSet.get("openaiChat");
+            session.log("OpenAI table retrieved: " + (openaiTable != null));
+            
+            if (openaiTable != null) {
+                // Get the response value from the table (row 0, column "response")
+                Object responseValue = openaiTable.getValue(0, "response");
+                session.log("Table getValue response: " + responseValue);
+                
+                if (responseValue != null) {
+                    aiResponse = (String) responseValue;
+                    session.log("AI response: " + aiResponse);
+                }
+            }
+        }
+    } else {
+        session.log("No AI response available from datamodel");
+    }
+    
+    // Create chat response with OpenAI content or fallback
+    String chatResponse;
+    if (aiResponse != null) {
+        chatResponse = "{\"message\": \"" + aiResponse + "\"}";
+    } else {
+        session.log("No response from OpenAI, using generic fallback");
+        chatResponse = "{\"message\": \"🤖 I'm having trouble connecting to AI services. Please try again.\"}";
+    }
+    
+    // ====================================================================
+    // UPDATE CHAT DISPLAY PANEL
+    // ====================================================================
+    FormPanel chatPanel = layout.getPanel("Html2");
+    String chatHtml = manager.generateChatHtml(userInput, chatResponse);
+    chatPanel.setHtml(chatHtml);
+    session.log("Chat display updated");
+    
+    // ====================================================================
+    // PARSE CHAT RESPONSE AND EXECUTE COMMANDS
+    // ====================================================================
+    String message = manager.extractMessageFromJson(chatResponse);
+    String command = manager.extractJsonField(chatResponse, "command");
+    String trader = manager.extractJsonField(chatResponse, "trader");
+    
+    session.log("Parsed command: " + command + " | Trader: " + trader);
+    
+    // FILTER_TRADER command - Update all panels for specific trader
+    if (command != null && command == "FILTER_TRADER" && trader != null) {
+        session.log("Executing FILTER_TRADER for: " + trader);
+        
+        // Update HTML panel with trader metrics
+        FormPanel pn_Html1 = layout.getPanel("Html1");
+        String traderHtml = manager.generateTraderHtml(trader);
+        pn_Html1.setHtml(traderHtml);
+        session.log("Updated HTML panel for: " + trader);
+        
+        // Update P&L chart
+        Map filterParams = new Map();
+        filterParams.put("WHERE", "trader = '" + trader + "'");
+        Datamodel dm_trades3 = layout.getDatamodel("trades3");
+        dm_trades3.process(filterParams);
+        
+        // Update heatmap
+        Map heatmapParams = new Map();
+        String heatmapWhereClause = "symbol IN (SELECT DISTINCT symbol FROM trades WHERE trader = '" + trader + "')";
+        heatmapParams.put("WHERE", heatmapWhereClause);
+        Datamodel dm_marketdata1 = layout.getDatamodel("marketdata1");
+        dm_marketdata1.process(heatmapParams);
+        
+        session.log("SUCCESS: All panels updated for trader " + trader + " via AI chat command");
+        
+    // RESET_DASHBOARD command - Clear all filters and restore overview
+    } else if (command != null && command == "RESET_DASHBOARD") {
+        session.log("Executing RESET_DASHBOARD");
+        
+        // Reset HTML panel to original overview
+        String overviewHtml = "<style>\n    .metrics-container {\n        position: relative;\n        width: 100%;\n        height: 100%;\n        min-width: 600px;\n        min-height: 400px;\n        background-color: #f8f9fa;\n        font-family: Arial, sans-serif;\n    }\n    \n    .metric-card {\n        position: absolute;\n        background: white;\n        border-radius: 12px;\n        box-shadow: 0 4px 8px rgba(0,0,0,0.15);\n        border-left: 6px solid #007bff;\n        width: 45%;\n        height: 40%;\n    }\n    \n    .card-1 { top: 5%; left: 2.5%; border-left-color: #28a745; }\n    .card-2 { top: 5%; right: 2.5%; }\n    .card-3 { bottom: 5%; left: 2.5%; border-left-color: #28a745; }\n    .card-4 { bottom: 5%; right: 2.5%; border-left-color: #dc3545; }\n    \n    .metric-title {\n        position: absolute;\n        top: 25%;\n        left: 0;\n        right: 0;\n        font-size: 16px;\n        color: #6c757d;\n        font-weight: bold;\n        text-transform: uppercase;\n        text-align: center;\n    }\n    \n    .metric-value {\n        position: absolute;\n        top: 55%;\n        left: 0;\n        right: 0;\n        font-size: 36px;\n        font-weight: bold;\n        color: #212529;\n        text-align: center;\n    }\n    \n    .positive { color: #28a745; }\n    .negative { color: #dc3545; }\n</style>\n\n<div class=\"metrics-container\">\n    <div class=\"metric-card card-1\">\n        <div class=\"metric-title\">TOTAL P&L</div>\n        <div class=\"metric-value positive\">+$8,247</div>\n    </div>\n    \n    <div class=\"metric-card card-2\">\n        <div class=\"metric-title\">TOTAL TRADES</div>\n        <div class=\"metric-value\">1,000</div>\n    </div>\n    \n    <div class=\"metric-card card-3\">\n        <div class=\"metric-title\">TOP TRADER</div>\n        <div class=\"metric-value\">Mike Chen</div>\n    </div>\n    \n    <div class=\"metric-card card-4\">\n        <div class=\"metric-title\">WIN RATE</div>\n        <div class=\"metric-value\">67%</div>\n    </div>\n</div>";
+        FormPanel pn_Html1 = layout.getPanel("Html1");
+        pn_Html1.setHtml(overviewHtml);
+        
+        // Reset datamodels
+        Map resetParams = new Map();
+        resetParams.put("WHERE", "true");
+        Datamodel dm_trades3 = layout.getDatamodel("trades3");
+        Datamodel dm_marketdata1 = layout.getDatamodel("marketdata1");
+        dm_trades3.process(resetParams);
+        dm_marketdata1.process(resetParams);
+        
+        session.log("SUCCESS: Dashboard reset via AI chat command");
+    } else {
+        session.log("No actionable command found or invalid parameters");
+    }
+}
+
+// ========================================================================
+// END CHAT HANDLER
+// ========================================================================
