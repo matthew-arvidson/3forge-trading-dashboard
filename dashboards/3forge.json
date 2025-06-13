@@ -15,6 +15,189 @@
                   "entries":[
                     {
                       "amiscript":[
+                        "\n",
+                        "session.log(\"UESR QUERY:: Sending to OPENAI API:\", wheres.get(\"value\"));\n",
+                        "String v = wheres.get(\"value\");\n",
+                        "String s1 = urlEncode(v);\n",
+                        "String user = urlEncode(session.getUsername());\n",
+                        "String s2 = \"/chat?q=${s1}?user_id=${user}\";\n",
+                        "CREATE TABLE openaiChat AS USE _method=\"GET\" _validateCerts=\"true\" _urlExtension=s2 EXECUTE SELECT * FROM openaiChat;"
+                      ],
+                      "customFormats":[
+                        {
+                          "ari":"FIELDVALUE:Html3?textarea?",
+                          "customFormat":0
+                        }
+                      ],
+                      "defaultDs":"FlaskProxy",
+                      "domEvents":[
+                        {
+                          "ari":"FIELDVALUE:Html3?textarea?",
+                          "domEvent":0
+                        }
+                      ],
+                      "hasDatamodel":true,
+                      "linkedVariables":[
+                        {
+                          "ari":"LAYOUT:",
+                          "varName":"C__Program_Files_ami_amione_trading_dashboard"
+                        },
+                        {
+                          "ari":"PANEL:Html3",
+                          "varName":"Html3"
+                        },
+                        {
+                          "ari":"FIELD:Html3?textarea",
+                          "varName":"textarea"
+                        },
+                        {
+                          "ari":"DATAMODEL:trades3",
+                          "varName":"trades3"
+                        },
+                        {
+                          "ari":"FIELDVALUE:Html3?textarea?",
+                          "varName":"value"
+                        }
+                      ],
+                      "name":"onProcess",
+                      "schema":{
+                        "tbl":[
+                          {
+                            "cols":[
+                              {
+                                "nm":"command",
+                                "tp":"String"
+                              },
+                              {
+                                "nm":"message",
+                                "tp":"String"
+                              },
+                              {
+                                "nm":"status",
+                                "tp":"String"
+                              },
+                              {
+                                "nm":"trader",
+                                "tp":"String"
+                              }
+                            ],
+                            "nm":"openaiChat",
+                            "oc":"apply"
+                          }
+                        ]
+                      },
+                      "testInputType":"cust",
+                      "testInputs":{
+                        "WHERE":"true",
+                        "rtevents":"{\"TEST\": \"TEST\"}",
+                        "wheres":"null"
+                      }
+                    },
+                    {
+                      "amiscript":[
+                        "// ========================================================================\n",
+                        "// TRADING DASHBOARD CHAT ONCOMPLETE HANDLER - OpenAI Integration\n",
+                        "// ========================================================================\n",
+                        "// This script should be attached to the onComplete event of the OpenAI REST datasource/datamodel.\n",
+                        "// It updates the chat UI and dashboard based on the latest OpenAI response and user input.\n",
+                        "// ========================================================================\n",
+                        "\n",
+                        "// Get the latest user input (from the wheres map or a variable)\n",
+                        "String userInput = wheres.get(\"value\"); // Adjust to your actual field reference if needed\n",
+                        "\n",
+                        "// Get the latest OpenAI response from the datamodel table\n",
+                        "Datamodel openaiDatamodel = layout.getDatamodel(\"_127_0_0_1_5000\");\n",
+                        "TableSet tableSet = openaiDatamodel.getData();\n",
+                        "Table openaiTable = tableSet.get(\"openaiChat\");\n",
+                        "\n",
+                        "String message = \"\";\n",
+                        "String command = \"\";\n",
+                        "String trader = \"\";\n",
+                        "String status = \"\";\n",
+                        "\n",
+                        "if (openaiTable != null && openaiTable.getRowsCount() > 0) {\n",
+                        "    message = openaiTable.getValue(0, \"message\");\n",
+                        "    command = openaiTable.getValue(0, \"command\");\n",
+                        "    trader =  openaiTable.getValue(0, \"trader\");\n",
+                        "    status =  openaiTable.getValue(0, \"status\");\n",
+                        "}\n",
+                        "\n",
+                        "// Generate the chat HTML (call your existing method or build it here)\n",
+                        "TradingDashboardManager manager = new TradingDashboardManager();\n",
+                        "String chatResponse = \"{\\\"message\\\": \\\"\" + message + \"\\\"}\";\n",
+                        "String chatHtml = manager.generateChatHtml(userInput, chatResponse);\n",
+                        "\n",
+                        "// Update the chat panel\n",
+                        "FormPanel chatPanel = layout.getPanel(\"Html2\");\n",
+                        "chatPanel.setHtml(chatHtml);\n",
+                        "\n",
+                        "// ====================================================================\n",
+                        "// PARSE CHAT RESPONSE AND EXECUTE COMMANDS\n",
+                        "// ====================================================================\n",
+                        "// Use the extracted command and trader directly\n",
+                        "if (command != null && command == \"FILTER_TRADER\" && trader != null) {\n",
+                        "    // Update HTML panel with trader metrics\n",
+                        "    FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
+                        "    String traderHtml = manager.generateTraderHtml(trader);\n",
+                        "    pn_Html1.setHtml(traderHtml);\n",
+                        "\n",
+                        "    // Update P&L chart\n",
+                        "    Map filterParams = new Map();\n",
+                        "    filterParams.put(\"WHERE\", \"trader = '\" + trader + \"'\");\n",
+                        "    Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
+                        "    dm_trades3.process(filterParams);\n",
+                        "\n",
+                        "    // Update heatmap\n",
+                        "    Map heatmapParams = new Map();\n",
+                        "    String heatmapWhereClause = \"symbol IN (SELECT DISTINCT symbol FROM trades WHERE trader = '\" + trader + \"')\";\n",
+                        "    heatmapParams.put(\"WHERE\", heatmapWhereClause);\n",
+                        "    Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
+                        "    dm_marketdata1.process(heatmapParams);\n",
+                        "\n",
+                        "// RESET_DASHBOARD command - Clear all filters and restore overview\n",
+                        "} else if (command != null && command == \"RESET_DASHBOARD\") {\n",
+                        "    // Reset HTML panel to original overview\n",
+                        "    String overviewHtml = \"<style>\\n    .metrics-container {\\n        position: relative;\\n        width: 100%;\\n        height: 100%;\\n        min-width: 600px;\\n        min-height: 400px;\\n        background-color: #f8f9fa;\\n        font-family: Arial, sans-serif;\\n    }\\n    \\n    .metric-card {\\n        position: absolute;\\n        background: white;\\n        border-radius: 12px;\\n        box-shadow: 0 4px 8px rgba(0,0,0,0.15);\\n        border-left: 6px solid #007bff;\\n        width: 45%;\\n        height: 40%;\\n    }\\n    \\n    .card-1 { top: 5%; left: 2.5%; border-left-color: #28a745; }\\n    .card-2 { top: 5%; right: 2.5%; }\\n    .card-3 { bottom: 5%; left: 2.5%; border-left-color: #28a745; }\\n    .card-4 { bottom: 5%; right: 2.5%; border-left-color: #dc3545; }\\n    \\n    .metric-title {\\n        position: absolute;\\n        top: 25%;\\n        left: 0;\\n        right: 0;\\n        font-size: 16px;\\n        color: #6c757d;\\n        font-weight: bold;\\n        text-transform: uppercase;\\n        text-align: center;\\n    }\\n    \\n    .metric-value {\\n        position: absolute;\\n        top: 55%;\\n        left: 0;\\n        right: 0;\\n        font-size: 36px;\\n        font-weight: bold;\\n        color: #212529;\\n        text-align: center;\\n    }\\n    \\n    .positive { color: #28a745; }\\n    .negative { color: #dc3545; }\\n</style>\\n\\n<div class=\\\"metrics-container\\\">\\n    <div class=\\\"metric-card card-1\\\">\\n        <div class=\\\"metric-title\\\">TOTAL P&L</div>\\n        <div class=\\\"metric-value positive\\\">+$8,247</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-2\\\">\\n        <div class=\\\"metric-title\\\">TOTAL TRADES</div>\\n        <div class=\\\"metric-value\\\">1,000</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-3\\\">\\n        <div class=\\\"metric-title\\\">TOP TRADER</div>\\n        <div class=\\\"metric-value\\\">Mike Chen</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-4\\\">\\n        <div class=\\\"metric-title\\\">WIN RATE</div>\\n        <div class=\\\"metric-value\\\">67%</div>\\n    </div>\\n</div>\";\n",
+                        "    FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
+                        "    pn_Html1.setHtml(overviewHtml);\n",
+                        "\n",
+                        "    // Reset datamodels\n",
+                        "    Map resetParams = new Map();\n",
+                        "    resetParams.put(\"WHERE\", \"true\");\n",
+                        "    Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
+                        "    Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
+                        "    dm_trades3.process(resetParams);\n",
+                        "    dm_marketdata1.process(resetParams);\n",
+                        "}\n",
+                        "// ========================================================================\n",
+                        "// END CHAT ONCOMPLETE HANDLER\n",
+                        "// ======================================================================== "
+                      ],
+                      "hasDatamodel":true,
+                      "linkedVariables":[
+                      ],
+                      "name":"onComplete",
+                      "testInputType":"cust",
+                      "testInputs":{
+                        "WHERE":"",
+                        "wheres":""
+                      }
+                    }
+                  ]
+                },
+                "datasources":[
+                  "FlaskProxy"
+                ],
+                "lbl":"_127_0_0_1_5000",
+                "queryMode":"visible",
+                "test_input_type":"OPEN",
+                "test_input_vars":"String WHERE=\"true\";"
+              },
+              {
+                "callbacks":{
+                  "entries":[
+                    {
+                      "amiscript":[
                         "{\n",
                         "  CREATE TABLE marketdata AS EXECUTE SELECT * FROM `marketdata` WHERE ${WHERE};\n",
                         "  \n",
@@ -683,7 +866,7 @@
               "amiStyle":{
                 "pt":"LAYOUT_DEFAULT"
               },
-              "child1":"Html2",
+              "child1":"Scroll1",
               "child2":"Html3",
               "dir":"h",
               "locked":false,
@@ -719,7 +902,7 @@
               "amiStyle":{
                 "pt":"LAYOUT_DEFAULT"
               },
-              "htmlTemplate2":"<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        .chat-container {\n            position: relative;\n            width: 100%;\n            height: 100%;\n            min-width: 600px;\n            min-height: 400px;\n            background-color: #f8f9fa;\n            font-family: Arial, sans-serif;\n        }\n        \n        .chat-header {\n            position: absolute;\n            top: 2%;\n            left: 0;\n            right: 0;\n            background: #2563eb;\n            color: white;\n            padding: 12px 16px;\n            text-align: center;\n            font-weight: bold;\n            border-radius: 8px;\n            margin: 0 2%;\n        }\n        \n        .chat-messages {\n            position: absolute;\n            top: 15%;\n            left: 2%;\n            right: 2%;\n            bottom: 2%;  /* Extended to bottom since no input */\n            background: white;\n            border-radius: 8px;\n            box-shadow: 0 4px 8px rgba(0,0,0,0.15);\n            padding: 16px;\n            overflow-y: auto;\n        }\n        \n        .message {\n            margin-bottom: 12px;\n            padding: 8px 12px;\n            border-radius: 8px;\n            max-width: 80%;\n        }\n        \n        .user-message {\n            background: #dbeafe;\n            margin-left: auto;\n            text-align: right;\n        }\n        \n        .ai-message {\n            background: #f3f4f6;\n            margin-right: auto;\n        }\n        \n        .system-message {\n            background: #fef3c7;\n            margin: 0 auto;\n            text-align: center;\n            font-style: italic;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"chat-container\">\n        <div class=\"chat-header\">\n            \ud83e\udd16 AI Trading Assistant\n        </div>\n        \n        <div class=\"chat-messages\" id=\"chatMessages\">\n            <div class=\"system-message\">\n                Welcome! Try commands like \"Show me Sarah Jones\" or \"Who's the best performer?\"\n            </div>\n        </div>\n    </div>\n\n    <script>\n        function addMessage(text, type) {\n            const messagesDiv = document.getElementById('chatMessages');\n            const messageDiv = document.createElement('div');\n            messageDiv.className = 'message ' + type + '-message';\n            messageDiv.textContent = text;\n            messagesDiv.appendChild(messageDiv);\n            messagesDiv.scrollTop = messagesDiv.scrollHeight;\n        }\n    </script>\n</body>\n</html>",
+              "htmlTemplate2":"<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        .chat-container {\n            position: relative;\n            width: 100%;\n            height: 100%;\n            min-width: 600px;\n            min-height: 400px;\n            background-color: #f8f9fa;\n            font-family: Arial, sans-serif;\n        }\n        \n        .chat-header {\n            position: absolute;\n            top: 2%;\n            left: 0;\n            right: 0;\n            background: #2563eb;\n            color: white;\n            padding: 12px 16px;\n            text-align: center;\n            font-weight: bold;\n            border-radius: 8px;\n            margin: 0 2%;\n        }\n        \n        .chat-messages {\n            position: absolute;\n            top: 15%;\n            left: 2%;\n            right: 2%;\n            bottom: 2%;  /* Extended to bottom since no input */\n            background: white;\n            border-radius: 8px;\n            box-shadow: 0 4px 8px rgba(0,0,0,0.15);\n            padding: 16px;\n            overflow-y: auto;\n        }\n        \n        .message {\n            margin-bottom: 12px;\n            padding: 8px 12px;\n            border-radius: 8px;\n            max-width: 80%;\n        }\n        \n        .user-message {\n            background: #dbeafe;\n            margin-left: auto;\n            text-align: right;\n        }\n        \n        .ai-message {\n            background: #f3f4f6;\n            margin-right: auto;\n        }\n        \n        .system-message {\n            background: #fef3c7;\n            margin: 0 auto;\n            text-align: center;\n            font-style: italic;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"chat-container\">\n        <div class=\"chat-header\">\n            \ud83e\udd16 AI Trading Assistant\n        </div>\n        \n        <div class=\"chat-messages\" id=\"chatMessages\">\n            <div class=\"system-message\">\n                Welcome! Try commands like \"Show me Sarah Jones\" or \"Who's the best performer?\"\n            </div>\n        </div>\n    </div>\n\n    <script>\n  \n    </script>\n</body>\n</html>",
               "snap":20,
               "upid":"Html2"
             }
@@ -737,86 +920,25 @@
                     "entries":[
                       {
                         "amiscript":[
-                          "// Get the text input value\n",
-                          "String userInput = this.getValue();\n",
-                          "\n",
-                          "// Only process if there's actual input\n",
-                          "if (userInput != null && userInput.trim().length() > 0) {\n",
+                          "    String userInput = this.getValue();\n",
+                          "    Datamodel openaiDatamodel = layout.getDatamodel(\"_127_0_0_1_5000\");\n",
+                          "    openaiDatamodel.process({\"value\": userInput});\n",
                           "    \n",
-                          "    // Create our working manager instance\n",
-                          "    TradingDashboardManager manager = new TradingDashboardManager();\n",
-                          "    \n",
-                          "    // Process the chat message\n",
-                          "    String chatResponse = manager.processChatMessage(userInput);\n",
-                          "    \n",
-                          "    // Log for debugging\n",
-                          "    session.log(\"User input: \" + userInput);\n",
-                          "    session.log(\"Chat response: \" + chatResponse);\n",
-                          "    \n",
-                          "    // Clear the input field\n",
-                          "    this.setValue(\"\");\n",
-                          "    \n",
-                          "    // UPDATE CHAT DISPLAY PANEL\n",
-                          "    FormPanel chatPanel = layout.getPanel(\"Html2\");\n",
-                          "    String chatHtml = manager.generateChatHtml(userInput, chatResponse);\n",
-                          "    chatPanel.setHtml(chatHtml);\n",
-                          "    session.log(\"Chat display updated\");\n",
-                          "    \n",
-                          "    // PARSE CHAT RESPONSE AND EXECUTE COMMANDS DIRECTLY (like table click)\n",
-                          "    String message = manager.extractMessageFromJson(chatResponse);\n",
-                          "    String command = manager.extractJsonField(chatResponse, \"command\");\n",
-                          "    String trader = manager.extractJsonField(chatResponse, \"trader\");\n",
-                          "    \n",
-                          "    session.log(\"Parsed command: \" + command + \" | Trader: \" + trader);\n",
-                          "    \n",
-                          "    // Execute commands directly in AMI script (same as table click logic)\n",
-                          "    if (command != null && command == \"FILTER_TRADER\" && trader != null) {\n",
-                          "        session.log(\"Executing FILTER_TRADER for: \" + trader);\n",
-                          "        \n",
-                          "        // Update HTML panel with trader metrics (same as table click)\n",
-                          "        FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
-                          "        String traderHtml = manager.generateTraderHtml(trader);\n",
-                          "        pn_Html1.setHtml(traderHtml);\n",
-                          "        session.log(\"Updated HTML panel for: \" + trader);\n",
-                          "        \n",
-                          "        // Update P&L chart (same as table click)\n",
-                          "        Map filterParams = new Map();\n",
-                          "        filterParams.put(\"WHERE\", \"trader = '\" + trader + \"'\");\n",
-                          "        Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
-                          "        dm_trades3.process(filterParams);\n",
-                          "        \n",
-                          "        // Update heatmap (same as table click)\n",
-                          "        Map heatmapParams = new Map();\n",
-                          "        String heatmapWhereClause = \"symbol IN (SELECT DISTINCT symbol FROM trades WHERE trader = '\" + trader + \"')\";\n",
-                          "        heatmapParams.put(\"WHERE\", heatmapWhereClause);\n",
-                          "        Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
-                          "        dm_marketdata1.process(heatmapParams);\n",
-                          "        \n",
-                          "        session.log(\"SUCCESS: All panels updated for trader \" + trader + \" via AI chat command\");\n",
-                          "        \n",
-                          "    } else if (command != null && command == \"RESET_DASHBOARD\") {\n",
-                          "        session.log(\"Executing RESET_DASHBOARD\");\n",
-                          "        \n",
-                          "        // Reset HTML panel to original overview (same as initial load)\n",
-                          "        String overviewHtml = \"<style>\\n    .metrics-container {\\n        position: relative;\\n        width: 100%;\\n        height: 100%;\\n        min-width: 600px;\\n        min-height: 400px;\\n        background-color: #f8f9fa;\\n        font-family: Arial, sans-serif;\\n    }\\n    \\n    .metric-card {\\n        position: absolute;\\n        background: white;\\n        border-radius: 12px;\\n        box-shadow: 0 4px 8px rgba(0,0,0,0.15);\\n        border-left: 6px solid #007bff;\\n        width: 45%;\\n        height: 40%;\\n    }\\n    \\n    .card-1 { top: 5%; left: 2.5%; border-left-color: #28a745; }\\n    .card-2 { top: 5%; right: 2.5%; }\\n    .card-3 { bottom: 5%; left: 2.5%; border-left-color: #28a745; }\\n    .card-4 { bottom: 5%; right: 2.5%; border-left-color: #dc3545; }\\n    \\n    .metric-title {\\n        position: absolute;\\n        top: 25%;\\n        left: 0;\\n        right: 0;\\n        font-size: 16px;\\n        color: #6c757d;\\n        font-weight: bold;\\n        text-transform: uppercase;\\n        text-align: center;\\n    }\\n    \\n    .metric-value {\\n        position: absolute;\\n        top: 55%;\\n        left: 0;\\n        right: 0;\\n        font-size: 36px;\\n        font-weight: bold;\\n        color: #212529;\\n        text-align: center;\\n    }\\n    \\n    .positive { color: #28a745; }\\n    .negative { color: #dc3545; }\\n</style>\\n\\n<div class=\\\"metrics-container\\\">\\n    <div class=\\\"metric-card card-1\\\">\\n        <div class=\\\"metric-title\\\">TOTAL P&L</div>\\n        <div class=\\\"metric-value positive\\\">+$8,247</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-2\\\">\\n        <div class=\\\"metric-title\\\">TOTAL TRADES</div>\\n        <div class=\\\"metric-value\\\">1,000</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-3\\\">\\n        <div class=\\\"metric-title\\\">TOP TRADER</div>\\n        <div class=\\\"metric-value\\\">Mike Chen</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-4\\\">\\n        <div class=\\\"metric-title\\\">WIN RATE</div>\\n        <div class=\\\"metric-value\\\">67%</div>\\n    </div>\\n</div>\";\n",
-                          "        FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
-                          "        pn_Html1.setHtml(overviewHtml);\n",
-                          "        \n",
-                          "        // Reset datamodels\n",
-                          "        Map resetParams = new Map();\n",
-                          "        resetParams.put(\"WHERE\", \"true\");\n",
-                          "        Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
-                          "        Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
-                          "        dm_trades3.process(resetParams);\n",
-                          "        dm_marketdata1.process(resetParams);\n",
-                          "        \n",
-                          "        session.log(\"SUCCESS: Dashboard reset via AI chat command\");\n",
-                          "    } else {\n",
-                          "        session.log(\"No actionable command found or invalid parameters\");\n",
-                          "    }\n",
-                          "}"
+                          "    this.setValue(\"\")"
                         ],
                         "linkedVariables":[
+                          {
+                            "ari":"PANEL:Html3",
+                            "varName":"Html3"
+                          },
+                          {
+                            "ari":"FIELD:Html3?textarea",
+                            "varName":"textarea"
+                          },
+                          {
+                            "ari":"FIELDVALUE:Html3?textarea?",
+                            "varName":"value"
+                          }
                         ],
                         "name":"onEnterKey"
                       }
@@ -837,6 +959,56 @@
               ],
               "snap":20,
               "upid":"Html3"
+            }
+          },
+          {
+            "portletBuilderId":"scrollpane",
+            "portletConfig":{
+              "amiPanelId":"Scroll1",
+              "amiStyle":{
+                "pt":"LAYOUT_DEFAULT"
+              },
+              "callbacks":{
+                "entries":[
+                  {
+                    "amiscript":[
+                      "// Simple test: scroll to bottom on any key press\n",
+                      "session.log(\"\ud83d\udd11 Key pressed in scroll panel: \" + event);\n",
+                      "\n",
+                      "// Test scroll to bottom\n",
+                      "this.setScrollPositionVertical(999999);\n",
+                      "session.log(\"\ud83d\udcdc Scroll to bottom executed from within scroll panel\");\n",
+                      "\n",
+                      "// Also log current position for debugging\n",
+                      "Integer currentPos = this.getScrollPositionVertical();\n",
+                      "session.log(\"\ud83d\udcca Current scroll position after scroll: \" + currentPos);\n",
+                      "\n",
+                      "ScrollPanel scrollPanel = this;\n",
+                      "Integer scrollHeight = scrollPanel.getScrollPositionVertical(); // Max possible\n",
+                      "session.log(\"\ud83d\udccf Container can scroll. Max height check needed\");\n",
+                      "\n",
+                      "// Try getting inner panel to check content size\n",
+                      "Panel innerPanel = scrollPanel.getInnerPanel();\n",
+                      "session.log(\"\ud83d\udce6 Inner panel: \" + innerPanel.getId());"
+                    ],
+                    "linkedVariables":[
+                    ],
+                    "name":"onKey"
+                  }
+                ]
+              },
+              "child":"Html2",
+              "halign":1,
+              "innerHeight":952,
+              "innerMaxHeight":-1,
+              "innerMaxWidth":-1,
+              "innerMinHeight":839,
+              "innerMinWidth":838,
+              "innerWidth":838,
+              "left":0.0,
+              "top":952.0,
+              "upid":"Scroll1",
+              "valign":3
             }
           },
           {

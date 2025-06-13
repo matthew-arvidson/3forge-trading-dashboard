@@ -1,0 +1,77 @@
+// ========================================================================
+// TRADING DASHBOARD CHAT ONCOMPLETE HANDLER - OpenAI Integration
+// ========================================================================
+// This script should be attached to the onComplete event of the OpenAI REST datasource/datamodel.
+// It updates the chat UI and dashboard based on the latest OpenAI response and user input.
+// ========================================================================
+
+// Get the latest user input (from the wheres map or a variable)
+String userInput = wheres.get("value"); // Adjust to your actual field reference if needed
+
+// Get the latest OpenAI response from the datamodel table
+Datamodel openaiDatamodel = layout.getDatamodel("_127_0_0_1_5000");
+TableSet tableSet = openaiDatamodel.getData();
+Table openaiTable = tableSet.get("ResponseData");
+
+String message = "";
+String command = "";
+String trader = "";
+String status = "";
+
+if (openaiTable != null && openaiTable.getRowsCount() > 0) {
+    message = (String) openaiTable.getValue(0, "message");
+    command = (String) openaiTable.getValue(0, "command");
+    trader = (String) openaiTable.getValue(0, "trader");
+    status = (String) openaiTable.getValue(0, "status");
+}
+
+// Generate the chat HTML (call your existing method or build it here)
+TradingDashboardManager manager = new TradingDashboardManager();
+String chatResponse = "{\"message\": \"" + message + "\"}";
+String chatHtml = manager.generateChatHtml(userInput, chatResponse);
+
+// Update the chat panel
+FormPanel chatPanel = layout.getPanel("Html2");
+chatPanel.setHtml(chatHtml);
+
+// ====================================================================
+// PARSE CHAT RESPONSE AND EXECUTE COMMANDS
+// ====================================================================
+// Use the extracted command and trader directly
+if (command != null && command == "FILTER_TRADER" && trader != null) {
+    // Update HTML panel with trader metrics
+    FormPanel pn_Html1 = layout.getPanel("Html1");
+    String traderHtml = manager.generateTraderHtml(trader);
+    pn_Html1.setHtml(traderHtml);
+
+    // Update P&L chart
+    Map filterParams = new Map();
+    filterParams.put("WHERE", "trader = '" + trader + "'");
+    Datamodel dm_trades3 = layout.getDatamodel("trades3");
+    dm_trades3.process(filterParams);
+
+    // Update heatmap
+    Map heatmapParams = new Map();
+    String heatmapWhereClause = "symbol IN (SELECT DISTINCT symbol FROM trades WHERE trader = '" + trader + "')";
+    heatmapParams.put("WHERE", heatmapWhereClause);
+    Datamodel dm_marketdata1 = layout.getDatamodel("marketdata1");
+    dm_marketdata1.process(heatmapParams);
+
+// RESET_DASHBOARD command - Clear all filters and restore overview
+} else if (command != null && command == "RESET_DASHBOARD") {
+    // Reset HTML panel to original overview
+    String overviewHtml = "<style>\n    .metrics-container {\n        position: relative;\n        width: 100%;\n        height: 100%;\n        min-width: 600px;\n        min-height: 400px;\n        background-color: #f8f9fa;\n        font-family: Arial, sans-serif;\n    }\n    \n    .metric-card {\n        position: absolute;\n        background: white;\n        border-radius: 12px;\n        box-shadow: 0 4px 8px rgba(0,0,0,0.15);\n        border-left: 6px solid #007bff;\n        width: 45%;\n        height: 40%;\n    }\n    \n    .card-1 { top: 5%; left: 2.5%; border-left-color: #28a745; }\n    .card-2 { top: 5%; right: 2.5%; }\n    .card-3 { bottom: 5%; left: 2.5%; border-left-color: #28a745; }\n    .card-4 { bottom: 5%; right: 2.5%; border-left-color: #dc3545; }\n    \n    .metric-title {\n        position: absolute;\n        top: 25%;\n        left: 0;\n        right: 0;\n        font-size: 16px;\n        color: #6c757d;\n        font-weight: bold;\n        text-transform: uppercase;\n        text-align: center;\n    }\n    \n    .metric-value {\n        position: absolute;\n        top: 55%;\n        left: 0;\n        right: 0;\n        font-size: 36px;\n        font-weight: bold;\n        color: #212529;\n        text-align: center;\n    }\n    \n    .positive { color: #28a745; }\n    .negative { color: #dc3545; }\n</style>\n\n<div class=\"metrics-container\">\n    <div class=\"metric-card card-1\">\n        <div class=\"metric-title\">TOTAL P&L</div>\n        <div class=\"metric-value positive\">+$8,247</div>\n    </div>\n    \n    <div class=\"metric-card card-2\">\n        <div class=\"metric-title\">TOTAL TRADES</div>\n        <div class=\"metric-value\">1,000</div>\n    </div>\n    \n    <div class=\"metric-card card-3\">\n        <div class=\"metric-title\">TOP TRADER</div>\n        <div class=\"metric-value\">Mike Chen</div>\n    </div>\n    \n    <div class=\"metric-card card-4\">\n        <div class=\"metric-title\">WIN RATE</div>\n        <div class=\"metric-value\">67%</div>\n    </div>\n</div>";
+    FormPanel pn_Html1 = layout.getPanel("Html1");
+    pn_Html1.setHtml(overviewHtml);
+
+    // Reset datamodels
+    Map resetParams = new Map();
+    resetParams.put("WHERE", "true");
+    Datamodel dm_trades3 = layout.getDatamodel("trades3");
+    Datamodel dm_marketdata1 = layout.getDatamodel("marketdata1");
+    dm_trades3.process(resetParams);
+    dm_marketdata1.process(resetParams);
+}
+// ========================================================================
+// END CHAT ONCOMPLETE HANDLER
+// ======================================================================== 

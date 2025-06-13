@@ -215,14 +215,24 @@ task deployConfig {
     doLast {
         def amiConfigDir = new File('C:/Program Files/ami/amione/config')
         
-        // Deploy custom properties with class registrations
-        def customConfig = new File('config/ami-custom.properties')
+        // Deploy custom properties with class registrations to local.properties
+        def customConfig = new File('config/ami-custom.local.properties')
+        def localPropertiesTarget = new File(amiConfigDir, 'local.properties')
         if (customConfig.exists()) {
+            // Backup existing local.properties first
+            if (localPropertiesTarget.exists()) {
+                def backupFile = new File(amiConfigDir, 'local.properties.backup')
+                backupFile.text = localPropertiesTarget.text
+                println "📄 Backed up existing local.properties"
+            }
+            
+            // For now, just copy our custom config as-is (safer)
             copy {
                 from customConfig
                 into amiConfigDir
+                rename { 'local.properties.trading-classes' }
             }
-            println "📋 Deployed ami-custom.properties with class registrations"
+            println "📋 Created local.properties.trading-classes for manual merge"
         }
     }
 }
@@ -389,13 +399,38 @@ task rebuild(dependsOn: buildDev) {
 jar {
     archiveFileName = 'trading-dashboard.jar'
     
+    // Ensure all compiled classes are included
+    from sourceSets.main.output
+    
+    // Avoid duplicate files
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
     manifest {
         attributes(
             'Implementation-Title': 'Trading Dashboard Custom Classes',
             'Implementation-Version': version,
             'Built-By': System.getProperty('user.name'),
-            'Built-Date': new Date().toString()
+            'Built-Date': new Date().toString(),
+            'Main-Class': 'com.forge.trading.TradingDashboardManager'
         )
+    }
+    
+    doLast {
+        println "📦 JAR created: ${archiveFile.get().asFile.absolutePath}"
+        println "📊 JAR size: ${archiveFile.get().asFile.length()} bytes"
+        
+        // List contents for verification
+        def jarFile = archiveFile.get().asFile
+        if (jarFile.exists()) {
+            println "📋 JAR contents:"
+            java.util.zip.ZipFile zip = new java.util.zip.ZipFile(jarFile)
+            zip.entries().each { entry ->
+                if (entry.name.endsWith('.class')) {
+                    println "   ✓ ${entry.name}"
+                }
+            }
+            zip.close()
+        }
     }
 }
 

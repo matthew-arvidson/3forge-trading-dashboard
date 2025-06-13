@@ -5,8 +5,10 @@ import com.f1.ami.amicommon.customobjects.AmiScriptAccessible;
 @AmiScriptAccessible(name = "TradingDashboardManager")
 public class TradingDashboardManager {
     
-    // Static chatbot instance for delegation (dumb component)
-    private static TradingAiChatbot chatbot = new TradingAiChatbot();
+    // Static chatbot instance for delegation (minimal OpenAI version)
+    private static TradingAiChatbotFinal chatbot = new TradingAiChatbotFinal();
+    
+    private String currentChatQuery = "";  // Default empty query
     
     @AmiScriptAccessible
     public TradingDashboardManager() {
@@ -401,8 +403,14 @@ public class TradingDashboardManager {
     
     @AmiScriptAccessible(name = "processChatMessage", params = {"userMessage"})
     public String processChatMessage(Object userMessage) {
-        // Delegate to chatbot instance
+        // Delegate to chatbot (dumb component)
         return chatbot.processChatMessage(userMessage);
+    }
+    
+    @AmiScriptAccessible(name = "processChatMessageWithSession", params = {"userMessage", "session"})
+    public String processChatMessageWithSession(Object userMessage, Object session) {
+        // Delegate to chatbot with session context
+        return chatbot.processChatMessageWithSession(userMessage, session);
     }
     
     @AmiScriptAccessible(name = "chatTest")
@@ -410,8 +418,6 @@ public class TradingDashboardManager {
         // Delegate to chatbot (dumb component utility)
         return chatbot.chatTest();
     }
-    
-
     
     // Simple chat - just current exchange (no complex history)
     @AmiScriptAccessible(name = "generateChatHtml", params = {"userInput", "chatResponse"})
@@ -440,7 +446,8 @@ public class TradingDashboardManager {
             // Use chatbot for JSON parsing (dumb component utility)
             String command = chatbot.extractJsonField(jsonResponse, "command");
             String trader = chatbot.extractJsonField(jsonResponse, "trader");
-            
+
+                
             String layoutInfo = (layout != null ? layout.getClass().getSimpleName() : "null");
             
             // Handle business logic here (smart component decisions)
@@ -530,5 +537,15 @@ public class TradingDashboardManager {
         } catch (Exception e) {
             return "DEBUG ERROR: " + e.getMessage();
         }
+    }
+    
+    @AmiScriptAccessible(name = "setCurrentChatQuery")
+    public void setCurrentChatQuery(String query) {
+        this.currentChatQuery = query;
+    }
+    
+    @AmiScriptAccessible(name = "getCurrentChatQuery")
+    public String getCurrentChatQuery() {
+        return this.currentChatQuery;
     }
 } 
