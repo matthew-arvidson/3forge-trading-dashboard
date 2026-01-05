@@ -144,7 +144,6 @@ const componentStyles = `
 /**
  * 3forge React Integration - Main Entry Point
  * 
- * This is a CLEAN, SIMPLE approach compared to code generation madness.
  * 
  * Components are registered here and mounted via Shadow DOM for style isolation.
  */
