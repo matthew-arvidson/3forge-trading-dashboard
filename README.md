@@ -7,6 +7,7 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 
 ### ✅ **Major Achievements:**
 - **🎉 COMPLETE 4-PANEL DASHBOARD**: Table clicking updates all panels simultaneously
+- **⚛️ CUSTOM REACT INTEGRATION**: HelloWorld & AG-Grid components with bidirectional communication
 - **📊 Dynamic HTML Panel**: Real-time trader performance cards with custom CSS styling
 - **🔥 Smart Heatmap Filtering**: Shows only symbols the selected trader has traded
 - **📈 Chart Integration**: P&L charts filter by trader selection
@@ -15,9 +16,11 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 
 ### ✅ **What's Working:**
 - **Trading Dashboard**: Complete 4-panel inter-widget communication system
+- **React Components**: HelloWorld (demo) + AG-Grid (production data grid) with Shadow DOM
 - **Custom Java Classes**: `TradingDashboardManager` (HTML generation) + `PanelManager` (panel utilities)
+- **React Plugin System**: `ReactGuiPlugin` + `ReactGuiAdapter` for seamless 3forge integration
 - **Data Sources**: SQLite database with trader-specific symbol preferences
-- **Build System**: Dual dev/prod deployment pipeline
+- **Build System**: Dual dev/prod deployment pipeline + React/Vite build
 - **Backup System**: Master backup with nuclear recovery option
 - **Reset Functionality**: Click any non-trader column to clear filters
 
@@ -49,6 +52,115 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 - **Lisa Wang**: TSLA, META, NVDA
 - **John Smith**: AAPL, MSFT, GOOGL
 - **Emma Davis**: AAPL, AMZN, MSFT
+
+## ⚛️ **REACT COMPONENT INTEGRATION**
+
+### 🎯 **Custom React Components in 3forge**
+**Implementation**: Clean, simple architecture for embedding React components with bidirectional communication.
+
+### **Components Available:**
+1. **HelloWorld**: Demo component showing prop passing, state management, and event callbacks
+2. **AG-Grid**: Production-ready data grid with sorting, filtering, row selection, and event handling
+
+### **Architecture:**
+- **Java Plugin**: `ReactGuiPlugin` + `ReactGuiAdapter` (AmiScript API)
+- **JavaScript Bridge**: `ReactGuiService.js` (connects Java to React)
+- **React Bundle**: `forge-react.js` (single-file deployment with Shadow DOM)
+- **Build System**: Vite + TypeScript for fast development
+
+### **How to Use (3forge Developer):**
+
+#### **Mount HelloWorld Component:**
+```javascript
+// In Div component AmiScript
+reactGui = __ReactGui;
+
+reactGui.mountComponent("myDiv", "HelloWorld", {
+    message: "Welcome!",
+    userName: session.username,
+    forgeItems: ["Trade", "Quote", "Order"]
+});
+
+// Handle events from React
+onAmiJsCallback(action, param) {
+    if (action == "buttonClicked") {
+        session.alert("Count: " + param[0]);
+    } else if (action == "itemSelected") {
+        session.alert("Selected: " + param[0]);
+    }
+}
+```
+
+#### **Mount AG-Grid Component:**
+```javascript
+// In Div component AmiScript
+reactGui = __ReactGui;
+
+// Define columns
+columns = new List();
+columns.add({field: "symbol", headerName: "Symbol", width: 150});
+columns.add({field: "price", headerName: "Price", width: 120});
+
+// Define data
+rows = new List();
+rows.add({symbol: "AAPL", price: 150.25, quantity: 100});
+rows.add({symbol: "GOOGL", price: 2800.50, quantity: 50});
+
+// Mount grid
+reactGui.mountComponent("myDiv", "AgGrid", {
+    columns: columns,
+    rows: rows
+});
+
+// Handle grid events
+onAmiJsCallback(action, param) {
+    if (action == "rowClicked") {
+        session.alert("Clicked: " + param[0].symbol);
+    }
+}
+```
+
+### **⚠️ Container Requirements:**
+**CRITICAL**: The Div container **must have explicit width and height** set:
+```
+width: 800px; height: 600px;
+```
+Without explicit dimensions, AG-Grid (and complex components) cannot render properly.
+
+### **Bidirectional Communication:**
+- **3forge → React**: Pass props via `mountComponent(elementId, componentName, props)`
+  - Java `List` → JavaScript `Array`
+  - Java `Map` → JavaScript `Object`
+  - Primitives auto-convert
+- **React → 3forge**: Send events via `window.amiJsCallback(element, action, ...params)`
+  - Captured in Div's `onAmiJsCallback` section
+
+### **Development Workflow:**
+
+#### **Build React Components:**
+```bash
+cd react-components
+npm install
+npm run build  # Output: resources/forge-react.js
+```
+
+#### **Deploy to 3forge:**
+```bash
+Copy-Item "resources\forge-react.js" -Destination "C:\Program Files\ami\amione\resources\forge-react.js" -Force
+```
+
+#### **Add New Component:**
+1. Create `react-components/src/MyComponent.tsx`
+2. Register in `react-components/src/main.tsx` COMPONENTS registry
+3. Build and deploy: `npm run build`
+4. Use in 3forge: `reactGui.mountComponent("myDiv", "MyComponent", {...})`
+
+### **Key Features:**
+- ✅ **Shadow DOM**: Complete style isolation (React CSS won't affect 3forge UI)
+- ✅ **Single Bundle**: One `forge-react.js` file contains all components
+- ✅ **TypeScript**: Type-safe component development
+- ✅ **Fast Builds**: Vite for sub-second rebuilds
+- ✅ **No Over-Engineering**: Simple, explicit API
 
 ## 🚨 **CRITICAL LESSONS LEARNED**
 
@@ -101,12 +213,26 @@ Remove-Item -Path "C:\Program Files\ami" -Recurse -Force
 ├── src/                     # Java source code
 │   └── main/java/com/forge/trading/
 │       ├── TradingDashboardManager.java  # HTML generation & trader metrics
-│       └── PanelManager.java            # Panel manipulation utilities (legacy)
+│       ├── PanelManager.java            # Panel manipulation utilities (legacy)
+│       ├── ReactGuiPlugin.java          # React plugin entry point
+│       └── ReactGuiAdapter.java         # React AmiScript API
+├── react-components/        # React project (Vite + TypeScript)
+│   ├── src/
+│   │   ├── main.tsx        # Component registry & mount logic
+│   │   ├── HelloWorld.tsx  # Demo component
+│   │   ├── AgGridComponent.tsx  # AG-Grid wrapper
+│   │   └── ag-grid-styles.ts    # Custom AG-Grid overrides
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+├── resources/               # Deployed resources
+│   ├── ReactGuiService.js  # JavaScript bridge
+│   └── forge-react.js      # Bundled React components
 ├── dashboards/              # 3forge JSON files
 │   └── 3forge.json         # Complete 4-panel dashboard configuration
 ├── config/                  # Configuration management
 │   ├── CONFIG_GUIDE.md     # Complete development guide
-│   ├── ami-custom.properties # Custom class registrations
+│   ├── ami-custom.local.properties # Custom class + plugin registrations
 │   └── working-state-backup/ # Master backup directory
 ├── scripts/                 # PowerShell automation
 │   ├── rebuild-dev.ps1     # Development rebuild + restart
@@ -129,6 +255,12 @@ Remove-Item -Path "C:\Program Files\ami" -Recurse -Force
 # For Java changes (requires rebuild)
 gradle buildProd
 .\scripts\rebuild-prod.ps1
+
+# For React component changes
+cd react-components
+npm run build
+Copy-Item "..\resources\forge-react.js" -Destination "C:\Program Files\ami\amione\resources\forge-react.js" -Force
+# Hard refresh browser (Ctrl+Shift+R)
 
 # For JSON/AMI Script changes (fast restart)
 # Just restart 3forge manually (~5 seconds)
@@ -220,6 +352,7 @@ gradle restoreWorkingState
 
 **🎉 Current State: PRODUCTION-READY DASHBOARD**
 - 4-panel inter-widget communication: ✅ 
+- React component integration (HelloWorld + AG-Grid): ✅
 - Dynamic HTML panel generation: ✅
 - Smart heatmap filtering: ✅
 - Chart integration: ✅
@@ -229,6 +362,6 @@ gradle restoreWorkingState
 - Build system: ✅
 - Recovery system: ✅
 
-**Last Major Update**: Complete 4-panel dashboard implementation
+**Last Major Update**: React component integration with Shadow DOM & bidirectional communication
 **Master Backup**: Clean state ready for deployment
 **Demo Status**: Ready for professional presentation 🚀

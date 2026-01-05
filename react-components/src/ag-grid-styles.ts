@@ -1,0 +1,39 @@
+// AG-Grid custom overrides - Core AG-Grid CSS is loaded separately
+// These are just visual tweaks on top of AG-Grid's base styles
+export const agGridCSS = `
+/* ============================================
+   AG-Grid Custom Overrides
+   (Base AG-Grid CSS is already loaded)
+   ============================================ */
+
+/* Enhanced spacing and colors */
+.ag-theme-alpine {
+  --ag-cell-horizontal-padding: 16px;
+  --ag-row-height: 42px;
+  --ag-header-height: 48px;
+  --ag-row-hover-color: #e8f4f8;
+  --ag-selected-row-background-color: #cce8f4;
+}
+
+/* Enhanced row interactions */
+.ag-theme-alpine .ag-row {
+  cursor: pointer;
+}
+
+/* Hide unwanted UI elements */
+.ag-theme-alpine .ag-header-select-all,
+.ag-theme-alpine .ag-selection-checkbox {
+  display: none !important;
+}
+
+/* Hide accessibility messages */
+.ag-theme-alpine .ag-aria-description-container,
+.ag-theme-alpine [role="presentation"]:not([class]) {
+  display: none !important;
+}
+
+/* Remove focus outlines for cleaner look */
+.ag-theme-alpine .ag-cell:focus {
+  outline: none;
+}
+`;

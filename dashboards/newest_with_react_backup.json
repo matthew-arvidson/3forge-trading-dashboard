@@ -1,0 +1,1207 @@
+{
+    "layouts":[
+      {
+        "data":{
+          "includeFiles":[],
+          "metadata":{
+            "browserTitle":"Trading Dashboard",
+            "customPrefsImportMode":"accept",
+            "customUserMenuTitle":"Arvidsons trading dashboard",
+            "dm":{
+              "dms":[
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":[
+                          "\n",
+                          "session.log(\"UESR QUERY:: Sending to OPENAI API:\", wheres.get(\"value\"));\n",
+                          "String v = wheres.get(\"value\");\n",
+                          "String s1 = urlEncode(v);\n",
+                          "String user = urlEncode(session.getUsername());\n",
+                          "String s2 = \"/chat?q=${s1}?user_id=${user}\";\n",
+                          "CREATE TABLE openaiChat AS USE _method=\"GET\" _validateCerts=\"true\" _urlExtension=s2 EXECUTE SELECT * FROM openaiChat;"
+                        ],
+                        "customFormats":[
+                          {"ari":"FIELDVALUE:Html3?textarea?","customFormat":0}
+                        ],
+                        "defaultDs":"FlaskProxy",
+                        "domEvents":[
+                          {"ari":"FIELDVALUE:Html3?textarea?","domEvent":0}
+                        ],
+                        "hasDatamodel":true,
+                        "linkedVariables":[
+                          {"ari":"LAYOUT:","varName":"C__Program_Files_ami_amione_trading_dashboard"},
+                          {"ari":"PANEL:Html3","varName":"Html3"},
+                          {"ari":"FIELD:Html3?textarea","varName":"textarea"},
+                          {"ari":"DATAMODEL:trades3","varName":"trades3"},
+                          {"ari":"FIELDVALUE:Html3?textarea?","varName":"value"}
+                        ],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"command","tp":"String"},
+                                {"nm":"message","tp":"String"},
+                                {"nm":"status","tp":"String"},
+                                {"nm":"trader","tp":"String"}
+                              ],
+                              "nm":"openaiChat",
+                              "oc":"apply"
+                            }
+                          ]
+                        },
+                        "testInputType":"cust",
+                        "testInputs":{"WHERE":"true","rtevents":"{\"TEST\": \"TEST\"}","wheres":"null"}
+                      },
+                      {
+                        "amiscript":[
+                          "// ========================================================================\n",
+                          "// TRADING DASHBOARD CHAT ONCOMPLETE HANDLER - OpenAI Integration\n",
+                          "// ========================================================================\n",
+                          "// This script should be attached to the onComplete event of the OpenAI REST datasource/datamodel.\n",
+                          "// It updates the chat UI and dashboard based on the latest OpenAI response and user input.\n",
+                          "// ========================================================================\n",
+                          "\n",
+                          "// Get the latest user input (from the wheres map or a variable)\n",
+                          "String userInput = wheres.get(\"value\"); // Adjust to your actual field reference if needed\n",
+                          "\n",
+                          "// Get the latest OpenAI response from the datamodel table\n",
+                          "Datamodel openaiDatamodel = layout.getDatamodel(\"_127_0_0_1_5000\");\n",
+                          "TableSet tableSet = openaiDatamodel.getData();\n",
+                          "Table openaiTable = tableSet.get(\"openaiChat\");\n",
+                          "\n",
+                          "String message = \"\";\n",
+                          "String command = \"\";\n",
+                          "String trader = \"\";\n",
+                          "String status = \"\";\n",
+                          "\n",
+                          "if (openaiTable != null && openaiTable.getRowsCount() > 0) {\n",
+                          "    message = openaiTable.getValue(0, \"message\");\n",
+                          "    command = openaiTable.getValue(0, \"command\");\n",
+                          "    trader =  openaiTable.getValue(0, \"trader\");\n",
+                          "    status =  openaiTable.getValue(0, \"status\");\n",
+                          "}\n",
+                          "\n",
+                          "// Generate the chat HTML (call your existing method or build it here)\n",
+                          "TradingDashboardManager manager = new TradingDashboardManager();\n",
+                          "String chatResponse = \"{\\\"message\\\": \\\"\" + message + \"\\\"}\";\n",
+                          "String chatHtml = manager.generateChatHtml(userInput, chatResponse);\n",
+                          "\n",
+                          "// Update the chat panel\n",
+                          "FormPanel chatPanel = layout.getPanel(\"Html2\");\n",
+                          "chatPanel.setHtml(chatHtml);\n",
+                          "\n",
+                          "// ====================================================================\n",
+                          "// PARSE CHAT RESPONSE AND EXECUTE COMMANDS\n",
+                          "// ====================================================================\n",
+                          "// Use the extracted command and trader directly\n",
+                          "if (command != null && command == \"FILTER_TRADER\" && trader != null) {\n",
+                          "    // Update HTML panel with trader metrics\n",
+                          "    FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
+                          "    String traderHtml = manager.generateTraderHtml(trader);\n",
+                          "    pn_Html1.setHtml(traderHtml);\n",
+                          "\n",
+                          "    // Update P&L chart\n",
+                          "    Map filterParams = new Map();\n",
+                          "    filterParams.put(\"WHERE\", \"trader = '\" + trader + \"'\");\n",
+                          "    Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
+                          "    dm_trades3.process(filterParams);\n",
+                          "\n",
+                          "    // Update heatmap\n",
+                          "    Map heatmapParams = new Map();\n",
+                          "    String heatmapWhereClause = \"symbol IN (SELECT DISTINCT symbol FROM trades WHERE trader = '\" + trader + \"')\";\n",
+                          "    heatmapParams.put(\"WHERE\", heatmapWhereClause);\n",
+                          "    Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
+                          "    dm_marketdata1.process(heatmapParams);\n",
+                          "\n",
+                          "// RESET_DASHBOARD command - Clear all filters and restore overview\n",
+                          "} else if (command != null && command == \"RESET_DASHBOARD\") {\n",
+                          "    // Reset HTML panel to original overview\n",
+                          "    String overviewHtml = \"<style>\\n    .metrics-container {\\n        position: relative;\\n        width: 100%;\\n        height: 100%;\\n        min-width: 600px;\\n        min-height: 400px;\\n        background-color: #f8f9fa;\\n        font-family: Arial, sans-serif;\\n    }\\n    \\n    .metric-card {\\n        position: absolute;\\n        background: white;\\n        border-radius: 12px;\\n        box-shadow: 0 4px 8px rgba(0,0,0,0.15);\\n        border-left: 6px solid #007bff;\\n        width: 45%;\\n        height: 40%;\\n    }\\n    \\n    .card-1 { top: 5%; left: 2.5%; border-left-color: #28a745; }\\n    .card-2 { top: 5%; right: 2.5%; }\\n    .card-3 { bottom: 5%; left: 2.5%; border-left-color: #28a745; }\\n    .card-4 { bottom: 5%; right: 2.5%; border-left-color: #dc3545; }\\n    \\n    .metric-title {\\n        position: absolute;\\n        top: 25%;\\n        left: 0;\\n        right: 0;\\n        font-size: 16px;\\n        color: #6c757d;\\n        font-weight: bold;\\n        text-transform: uppercase;\\n        text-align: center;\\n    }\\n    \\n    .metric-value {\\n        position: absolute;\\n        top: 55%;\\n        left: 0;\\n        right: 0;\\n        font-size: 36px;\\n        font-weight: bold;\\n        color: #212529;\\n        text-align: center;\\n    }\\n    \\n    .positive { color: #28a745; }\\n    .negative { color: #dc3545; }\\n</style>\\n\\n<div class=\\\"metrics-container\\\">\\n    <div class=\\\"metric-card card-1\\\">\\n        <div class=\\\"metric-title\\\">TOTAL P&L</div>\\n        <div class=\\\"metric-value positive\\\">+$8,247</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-2\\\">\\n        <div class=\\\"metric-title\\\">TOTAL TRADES</div>\\n        <div class=\\\"metric-value\\\">1,000</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-3\\\">\\n        <div class=\\\"metric-title\\\">TOP TRADER</div>\\n        <div class=\\\"metric-value\\\">Mike Chen</div>\\n    </div>\\n    \\n    <div class=\\\"metric-card card-4\\\">\\n        <div class=\\\"metric-title\\\">WIN RATE</div>\\n        <div class=\\\"metric-value\\\">67%</div>\\n    </div>\\n</div>\";\n",
+                          "    FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
+                          "    pn_Html1.setHtml(overviewHtml);\n",
+                          "\n",
+                          "    // Reset datamodels\n",
+                          "    Map resetParams = new Map();\n",
+                          "    resetParams.put(\"WHERE\", \"true\");\n",
+                          "    Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
+                          "    Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
+                          "    dm_trades3.process(resetParams);\n",
+                          "    dm_marketdata1.process(resetParams);\n",
+                          "}\n",
+                          "// ========================================================================\n",
+                          "// END CHAT ONCOMPLETE HANDLER\n",
+                          "// ======================================================================== "
+                        ],
+                        "hasDatamodel":true,
+                        "linkedVariables":[],
+                        "name":"onComplete",
+                        "testInputType":"cust",
+                        "testInputs":{"WHERE":"","wheres":""}
+                      }
+                    ]
+                  },
+                  "datasources":["FlaskProxy"],
+                  "lbl":"_127_0_0_1_5000",
+                  "queryMode":"visible",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                },
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":[
+                          "{\n",
+                          "  CREATE TABLE marketdata AS EXECUTE SELECT * FROM `marketdata` WHERE ${WHERE};\n",
+                          "  \n",
+                          "  CREATE TABLE market_heatmap AS\n",
+                          "  SELECT \n",
+                          "      symbol,\n",
+                          "      last as current_price,\n",
+                          "      change as price_change,\n",
+                          "      changePercent as pct_change,\n",
+                          "      volume,\n",
+                          "      bid,\n",
+                          "      ask,\n",
+                          "      exchange\n",
+                          "  FROM marketdata\n",
+                          "  ORDER BY changePercent DESC;\n",
+                          "}\n"
+                        ],
+                        "defaultDs":"MockData",
+                        "hasDatamodel":true,
+                        "linkedVariables":[],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"symbol","tp":"String"},
+                                {"nm":"current_price","tp":"Float"},
+                                {"nm":"price_change","tp":"Float"},
+                                {"nm":"pct_change","tp":"Float"},
+                                {"nm":"volume","tp":"Integer"},
+                                {"nm":"bid","tp":"Float"},
+                                {"nm":"ask","tp":"Float"},
+                                {"nm":"exchange","tp":"String"}
+                              ],
+                              "nm":"market_heatmap",
+                              "oc":"ask"
+                            },
+                            {
+                              "cols":[
+                                {"nm":"symbol","tp":"String"},
+                                {"nm":"bid","tp":"Float"},
+                                {"nm":"ask","tp":"Float"},
+                                {"nm":"last","tp":"Float"},
+                                {"nm":"volume","tp":"Integer"},
+                                {"nm":"change","tp":"Float"},
+                                {"nm":"changePercent","tp":"Float"},
+                                {"nm":"timestamp","tp":"Integer"},
+                                {"nm":"exchange","tp":"String"}
+                              ],
+                              "nm":"marketdata",
+                              "oc":"ask"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "datasources":["MockData"],
+                  "lbl":"marketdata",
+                  "queryMode":"startup",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                },
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":[
+                          "{\n",
+                          "  session.log(\"MARKETDATA1 DATAMODEL: Processing with WHERE clause\");\n",
+                          "  \n",
+                          "  CREATE TABLE marketdata AS EXECUTE SELECT * FROM `marketdata` WHERE ${WHERE};\n",
+                          "  \n",
+                          "  session.log(\"MARKETDATA1 DATAMODEL: Query executed successfully\");\n",
+                          "}\n"
+                        ],
+                        "defaultDs":"MockData",
+                        "hasDatamodel":true,
+                        "linkedVariables":[],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"symbol","tp":"String"},
+                                {"nm":"bid","tp":"Float"},
+                                {"nm":"ask","tp":"Float"},
+                                {"nm":"last","tp":"Float"},
+                                {"nm":"volume","tp":"Integer"},
+                                {"nm":"change","tp":"Float"},
+                                {"nm":"changePercent","tp":"Float"},
+                                {"nm":"timestamp","tp":"Integer"},
+                                {"nm":"exchange","tp":"String"}
+                              ],
+                              "nm":"marketdata",
+                              "oc":"ask"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "datasources":["MockData"],
+                  "lbl":"marketdata1",
+                  "queryMode":"startup",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                },
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":["{\n","  CREATE TABLE trades AS EXECUTE SELECT * FROM `trades`;\n","}\n"],
+                        "defaultDs":"MockData",
+                        "hasDatamodel":true,
+                        "linkedVariables":[],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"id","tp":"Integer"},
+                                {"nm":"timestamp","tp":"Integer"},
+                                {"nm":"symbol","tp":"String"},
+                                {"nm":"price","tp":"Float"},
+                                {"nm":"volume","tp":"Integer"},
+                                {"nm":"side","tp":"String"},
+                                {"nm":"trader","tp":"String"},
+                                {"nm":"desk","tp":"String"},
+                                {"nm":"pnl","tp":"Float"}
+                              ],
+                              "nm":"trades",
+                              "oc":"ask"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "datasources":["MockData"],
+                  "lbl":"trades",
+                  "queryMode":"startup",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                },
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":[
+                          "CREATE TABLE trades AS \n",
+                          "SELECT \n",
+                          "    trader,\n",
+                          "    desk,\n",
+                          "    SUM(pnl) as total_pnl,\n",
+                          "    COUNT(*) as trade_count,\n",
+                          "    SUM(volume) as total_volume,\n",
+                          "    AVG(pnl) as avg_pnl\n",
+                          "FROM trades \n",
+                          "GROUP BY trader, desk\n",
+                          "ORDER BY total_pnl DESC;"
+                        ],
+                        "hasDatamodel":true,
+                        "inputDm":["trades"],
+                        "linkedVariables":[],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"trader","tp":"String"},
+                                {"nm":"desk","tp":"String"},
+                                {"nm":"total_pnl","tp":"Float"},
+                                {"nm":"trade_count","tp":"Long"},
+                                {"nm":"total_volume","tp":"Integer"},
+                                {"nm":"avg_pnl","tp":"Double"}
+                              ],
+                              "nm":"trades",
+                              "oc":"ask"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "lbl":"trades1",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                },
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":["{\n","  CREATE TABLE trades AS EXECUTE SELECT * FROM `trades` WHERE ${WHERE};\n","}\n"],
+                        "defaultDs":"MockData",
+                        "hasDatamodel":true,
+                        "linkedVariables":[],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"id","tp":"Integer"},
+                                {"nm":"timestamp","tp":"Integer"},
+                                {"nm":"symbol","tp":"String"},
+                                {"nm":"price","tp":"Float"},
+                                {"nm":"volume","tp":"Integer"},
+                                {"nm":"side","tp":"String"},
+                                {"nm":"trader","tp":"String"},
+                                {"nm":"desk","tp":"String"},
+                                {"nm":"pnl","tp":"Float"}
+                              ],
+                              "nm":"trades",
+                              "oc":"ask"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "datasources":["MockData"],
+                  "lbl":"trades2",
+                  "queryMode":"startup",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                },
+                {
+                  "callbacks":{
+                    "entries":[
+                      {
+                        "amiscript":[
+                          "{\n",
+                          "  CREATE TABLE trades AS EXECUTE SELECT * FROM `trades` WHERE ${WHERE};\n",
+                          "  \n",
+                          "  CREATE TABLE pnl_by_trader AS EXECUTE \n",
+                          "SELECT \n",
+                          "    trader,\n",
+                          "    SUM(pnl) as total_pnl\n",
+                          "FROM `trades` \n",
+                          "WHERE ${WHERE}\n",
+                          "GROUP BY trader;\n",
+                          "}\n"
+                        ],
+                        "defaultDs":"MockData",
+                        "hasDatamodel":true,
+                        "linkedVariables":[],
+                        "name":"onProcess",
+                        "schema":{
+                          "tbl":[
+                            {
+                              "cols":[
+                                {"nm":"trader","tp":"String"},
+                                {"nm":"total_pnl","tp":"Float"}
+                              ],
+                              "nm":"pnl_by_trader",
+                              "oc":"ask"
+                            },
+                            {
+                              "cols":[
+                                {"nm":"id","tp":"Integer"},
+                                {"nm":"timestamp","tp":"Integer"},
+                                {"nm":"symbol","tp":"String"},
+                                {"nm":"price","tp":"Float"},
+                                {"nm":"volume","tp":"Integer"},
+                                {"nm":"side","tp":"String"},
+                                {"nm":"trader","tp":"String"},
+                                {"nm":"desk","tp":"String"},
+                                {"nm":"pnl","tp":"Float"}
+                              ],
+                              "nm":"trades",
+                              "oc":"ask"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "datasources":["MockData"],
+                  "lbl":"trades3",
+                  "queryMode":"startup",
+                  "test_input_type":"OPEN",
+                  "test_input_vars":"String WHERE=\"true\";"
+                }
+              ]
+            },
+            "fileVersion":4,
+            "guiServices":{
+              "adapters":[
+                {
+                  "callbacks":{},
+                  "id":"REACTGUI"
+                }
+              ]
+            },
+            "menubarPosition":"top",
+            "rt":{},
+            "stm":{
+              "styles":[
+                {"id":"LAYOUT_DEFAULT","lb":"Layout Default","pt":"DEFAULT"}
+              ]
+            },
+            "transientIdPrefix":"TRANSIENT_",
+            "userPrefNamespace":"arvidson"
+          },
+          "portletConfigs":[
+            {
+              "portletBuilderId":"amidesktop",
+              "portletConfig":{
+                "amiPanelId":"@DESKTOP",
+                "amiStyle":{
+                  "bgCl":"#ffffff",
+                  "bold":false,
+                  "btnBdrCl":"#007bff",
+                  "btnBgCl":"#007bff",
+                  "btnIconCl":"#ffffff",
+                  "btnShdwCl":"#cce7ff",
+                  "deskBgCl":"#f8f9fa",
+                  "dialogFldBgCl":"#ffffff",
+                  "dialogFldFontCl":"#495057",
+                  "dialogFontFam":"Arial",
+                  "dialogFontSz":12.0,
+                  "dialogFormButtonBgCl":"#007bff",
+                  "dialogFormButtonFontCl":"#ffffff",
+                  "dialogFormButtonFontFam":"Arial",
+                  "dialogFormButtonPnlBgCl":"#f8f9fa",
+                  "dialogHi":300.0,
+                  "dialogTitleAlignment":"Left",
+                  "dialogTitleFontFam":"Arial",
+                  "dialogTitleFontSz":14.0,
+                  "dialogWd":400.0,
+                  "dialogXButtonHi":20.0,
+                  "dialogXButtonWd":30.0,
+                  "fontCl":"#212529",
+                  "helpBgCl":"#e9ecef",
+                  "helpFontCl":"#495057",
+                  "italic":false,
+                  "menuBgCl":"#ffffff",
+                  "menuBorderBtmRtCl":"#adb5bd",
+                  "menuBorderTpLfCl":"#dee2e6",
+                  "menuDisBgCl":"#e9ecef",
+                  "menuDisFontCl":"#6c757d",
+                  "menuDivCl":"#dee2e6",
+                  "menuFontCl":"#212529",
+                  "menuHoverBgCl":"#e9ecef",
+                  "menuHoverFontCl":"#007bff",
+                  "pt":"LAYOUT_DEFAULT",
+                  "titleBarBdrCl":"#dee2e6",
+                  "txtAlign":"Left",
+                  "underline":false,
+                  "usrWinBdrSz":1.0,
+                  "usrWinBtnCl":"#007bff",
+                  "usrWinBtnDownCl":"#004085",
+                  "usrWinBtnFontCl":"#ffffff",
+                  "usrWinBtnIconCl":"#ffffff",
+                  "usrWinBtnUpCl":"#0056b3",
+                  "usrWinCl":"#ffffff",
+                  "usrWinDownCl":"#e9ecef",
+                  "usrWinFdBdrCl":"#ced4da",
+                  "usrWinFdBgCl":"#ffffff",
+                  "usrWinFdLblFnCl":"#495057",
+                  "usrWinFdValFgCl":"#212529",
+                  "usrWinFormBgCl":"#ffffff",
+                  "usrWinFormBtnPanelCl":"#f8f9fa",
+                  "usrWinHeaderSz":30.0,
+                  "usrWinInnerBdrSz":1.0,
+                  "usrWinOuterBdrSz":1.0,
+                  "usrWinTxtCl":"#212529",
+                  "usrWinUpCl":"#f8f9fa",
+                  "waitBgCl":"#f8f9fa",
+                  "waitFillCl":"#007bff",
+                  "waitLineCl":"#007bff",
+                  "winBgCl":"#ffffff",
+                  "winBorderSz":2.0,
+                  "winClBtmRt":"#dee2e6",
+                  "winClTpLf":"#ffffff",
+                  "winFontCl":"#212529",
+                  "winFontFam":"Arial",
+                  "winFontSz":12.0,
+                  "winHeaderPd":8.0
+                },
+                "windows":[
+                  {
+                    "header":true,
+                    "heightDflt":621,
+                    "hidden":false,
+                    "leftDflt":800,
+                    "portlet":"Div1",
+                    "pos":0,
+                    "stateDflt":"flt",
+                    "title":"Trading Dashboard",
+                    "topDflt":220,
+                    "widthDflt":1720,
+                    "zindexDflt":2
+                  },
+                  {
+                    "header":true,
+                    "heightDflt":801,
+                    "hidden":false,
+                    "leftDflt":2520,
+                    "portlet":"Div4",
+                    "pos":1,
+                    "stateDflt":"flt",
+                    "title":"Chat Assistant",
+                    "topDflt":184,
+                    "widthDflt":588,
+                    "zindexDflt":1
+                  },
+                  {
+                    "header":true,
+                    "heightDflt":333,
+                    "hidden":false,
+                    "leftDflt":40,
+                    "portlet":"Div5",
+                    "pos":2,
+                    "stateDflt":"flt",
+                    "title":"Window",
+                    "topDflt":60,
+                    "widthDflt":768,
+                    "zindexDflt":3
+                  }
+                ]
+              }
+            },
+            {
+              "portletBuilderId":"div",
+              "portletConfig":{
+                "amiPanelId":"Div1",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "child1":"Div2",
+                "child2":"Div3",
+                "dir":"v",
+                "locked":false,
+                "offset":0.5,
+                "upid":"Div1"
+              }
+            },
+            {
+              "portletBuilderId":"div",
+              "portletConfig":{
+                "amiPanelId":"Div2",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "child1":"trades2",
+                "child2":"marketdata1",
+                "dir":"h",
+                "locked":false,
+                "offset":0.5,
+                "upid":"Div2"
+              }
+            },
+            {
+              "portletBuilderId":"div",
+              "portletConfig":{
+                "amiPanelId":"Div3",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "child1":"trades3",
+                "child2":"Html1",
+                "dir":"h",
+                "locked":false,
+                "offset":0.5,
+                "upid":"Div3"
+              }
+            },
+            {
+              "portletBuilderId":"div",
+              "portletConfig":{
+                "amiPanelId":"Div4",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "child1":"Scroll1",
+                "child2":"Html3",
+                "dir":"h",
+                "locked":false,
+                "offset":0.87301,
+                "upid":"Div4"
+              }
+            },
+            {
+              "portletBuilderId":"div",
+              "portletConfig":{
+                "amiPanelId":"Div5",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "child1":"Html5",
+                "child2":"Html4",
+                "dir":"v",
+                "locked":false,
+                "offset":0.45377,
+                "upid":"Div5"
+              }
+            },
+            {
+              "portletBuilderId":"amiform",
+              "portletConfig":{
+                "amiPanelId":"Html1",
+                "amiStyle":{
+                  "bgCl":"#ffffff",
+                  "pdBtmPx":0.0,
+                  "pdLfPx":0.0,
+                  "pdRtPx":0.0,
+                  "pdTpPx":0.0,
+                  "pt":"LAYOUT_DEFAULT",
+                  "scrollGripCl":"#6c757d",
+                  "scrollTrackCl":"#f1f3f4",
+                  "scrollWd":8.0,
+                  "showBtmBtns":false
+                },
+                "htmlTemplate2":"<style>\n    .metrics-container {\n        position: relative;\n        width: 100%;\n        height: 100%;\n        min-width: 600px;\n        min-height: 400px;\n        background-color: #f8f9fa;\n        font-family: Arial, sans-serif;\n    }\n    \n    .metric-card {\n        position: absolute;\n        background: white;\n        border-radius: 12px;\n        box-shadow: 0 4px 8px rgba(0,0,0,0.15);\n        border-left: 6px solid #007bff;\n        width: 45%;\n        height: 40%;\n    }\n    \n    .card-1 { top: 5%; left: 2.5%; border-left-color: #28a745; }\n    .card-2 { top: 5%; right: 2.5%; }\n    .card-3 { bottom: 5%; left: 2.5%; border-left-color: #28a745; }\n    .card-4 { bottom: 5%; right: 2.5%; border-left-color: #dc3545; }\n    \n    .metric-title {\n        position: absolute;\n        top: 25%;\n        left: 0;\n        right: 0;\n        font-size: 16px;\n        color: #6c757d;\n        font-weight: bold;\n        text-transform: uppercase;\n        text-align: center;\n    }\n    \n    .metric-value {\n        position: absolute;\n        top: 55%;\n        left: 0;\n        right: 0;\n        font-size: 36px;\n        font-weight: bold;\n        color: #212529;\n        text-align: center;\n    }\n    \n    .positive { color: #28a745; }\n    .negative { color: #dc3545; }\n</style>\n\n<div class=\"metrics-container\">\n    <div class=\"metric-card card-1\">\n        <div class=\"metric-title\">TOTAL P&L</div>\n        <div class=\"metric-value positive\">+$8,247</div>\n    </div>\n    \n    <div class=\"metric-card card-2\">\n        <div class=\"metric-title\">TOTAL TRADES</div>\n        <div class=\"metric-value\">1,000</div>\n    </div>\n    \n    <div class=\"metric-card card-3\">\n        <div class=\"metric-title\">TOP TRADER</div>\n        <div class=\"metric-value\">Mike Chen</div>\n    </div>\n    \n    <div class=\"metric-card card-4\">\n        <div class=\"metric-title\">WIN RATE</div>\n        <div class=\"metric-value\">67%</div>\n    </div>\n</div>",
+                "snap":20,
+                "upid":"Html1"
+              }
+            },
+            {
+              "portletBuilderId":"amiform",
+              "portletConfig":{
+                "amiPanelId":"Html2",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "htmlTemplate2":"<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        .chat-container {\n            position: relative;\n            width: 100%;\n            height: 100%;\n            min-width: 600px;\n            min-height: 400px;\n            background-color: #f8f9fa;\n            font-family: Arial, sans-serif;\n        }\n        \n        .chat-header {\n            position: absolute;\n            top: 2%;\n            left: 0;\n            right: 0;\n            background: #2563eb;\n            color: white;\n            padding: 12px 16px;\n            text-align: center;\n            font-weight: bold;\n            border-radius: 8px;\n            margin: 0 2%;\n        }\n        \n        .chat-messages {\n            position: absolute;\n            top: 15%;\n            left: 2%;\n            right: 2%;\n            bottom: 2%;  /* Extended to bottom since no input */\n            background: white;\n            border-radius: 8px;\n            box-shadow: 0 4px 8px rgba(0,0,0,0.15);\n            padding: 16px;\n            overflow-y: auto;\n        }\n        \n        .message {\n            margin-bottom: 12px;\n            padding: 8px 12px;\n            border-radius: 8px;\n            max-width: 80%;\n        }\n        \n        .user-message {\n            background: #dbeafe;\n            margin-left: auto;\n            text-align: right;\n        }\n        \n        .ai-message {\n            background: #f3f4f6;\n            margin-right: auto;\n        }\n        \n        .system-message {\n            background: #fef3c7;\n            margin: 0 auto;\n            text-align: center;\n            font-style: italic;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"chat-container\">\n        <div class=\"chat-header\">\n            \ud83e\udd16 AI Trading Assistant\n        </div>\n        \n        <div class=\"chat-messages\" id=\"chatMessages\">\n            <div class=\"system-message\">\n                Welcome! Try commands like \"Show me Sarah Jones\" or \"Who's the best performer?\"\n            </div>\n        </div>\n    </div>\n\n    <script>\n  \n    </script>\n</body>\n</html>",
+                "snap":20,
+                "upid":"Html2"
+              }
+            },
+            {
+              "portletBuilderId":"amiform",
+              "portletConfig":{
+                "amiPanelId":"Html3",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "fields":[
+                  {
+                    "callbacks":{
+                      "entries":[
+                        {
+                          "amiscript":[
+                            "    String userInput = this.getValue();\n",
+                            "    Datamodel openaiDatamodel = layout.getDatamodel(\"_127_0_0_1_5000\");\n",
+                            "    openaiDatamodel.process({\"value\": userInput});\n",
+                            "    \n",
+                            "    this.setValue(\"\")"
+                          ],
+                          "linkedVariables":[
+                            {"ari":"PANEL:Html3","varName":"Html3"},
+                            {"ari":"FIELD:Html3?textarea","varName":"textarea"},
+                            {"ari":"FIELDVALUE:Html3?textarea?","varName":"value"}
+                          ],
+                          "name":"onEnterKey"
+                        }
+                      ]
+                    },
+                    "heightPx":80,
+                    "l":"Type your message...",
+                    "leftPosPx":160,
+                    "n":"textarea",
+                    "style":{"pt":"LAYOUT_DEFAULT"},
+                    "t":"textArea",
+                    "topPosPx":20,
+                    "widthPx":540,
+                    "zidx":1
+                  }
+                ],
+                "snap":20,
+                "upid":"Html3"
+              }
+            },
+            {
+              "portletBuilderId":"amiform",
+              "portletConfig":{
+                "amiPanelId":"Html4",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "callbacks":{
+                  "entries":[
+                    {
+                      "amiscript":"__ReactGui.mountComponent(\"gridApp1\", \"AgGrid\", {});",
+                      "linkedVariables":[],
+                      "name":"onVisible"
+                    },
+                    {
+                      "amiscript":"session.alert(\"Callback: \" + action + \" \" + params.toJson());",
+                      "linkedVariables":[],
+                      "name":"onAmiJsCallback"
+                    }
+                  ]
+                },
+                "htmlTemplate2":"<div id=\"gridApp1\" style=\"height: 500px; width: 500px;\"></div>",
+                "snap":20,
+                "upid":"Html4"
+              }
+            },
+            {
+              "portletBuilderId":"amiform",
+              "portletConfig":{
+                "amiPanelId":"Html5",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "callbacks":{
+                  "entries":[
+                    {
+                      "amiscript":[
+                        "List myItems = new List();\n",
+                        "myItems.add(\"Apple\");\n",
+                        "myItems.add(\"Banana\");\n",
+                        "myItems.add(\"Cherry\");\n",
+                        "myItems.add(\"Date\");\n",
+                        "myItems.add(\"Elderberry\");\n",
+                        "\n",
+                        "\n",
+                        "__ReactGui.mountComponent(\"reactApp1\", \"HelloWorld\", {\"userName\": \"Matt\", \"message\": \"TEST MESSAGE\", \n",
+                        "  \"forgeItems\": myItems,\n",
+                        "  \"elementId\": \"reactApp1\"\n",
+                        "});\n",
+                        "\n"
+                      ],
+                      "linkedVariables":[],
+                      "name":"onVisible"
+                    },
+                    {
+                      "amiscript":"session.alert(\"Callback: \" + action + \" \" + params.toJson());",
+                      "linkedVariables":[],
+                      "name":"onAmiJsCallback"
+                    }
+                  ]
+                },
+                "htmlTemplate2":"<div id=\"reactApp1\"></div>",
+                "snap":20,
+                "upid":"Html5"
+              }
+            },
+            {
+              "portletBuilderId":"scrollpane",
+              "portletConfig":{
+                "amiPanelId":"Scroll1",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "callbacks":{
+                  "entries":[
+                    {
+                      "amiscript":[
+                        "// Simple test: scroll to bottom on any key press\n",
+                        "session.log(\"\ud83d\udd11 Key pressed in scroll panel: \" + event);\n",
+                        "\n",
+                        "// Test scroll to bottom\n",
+                        "this.setScrollPositionVertical(999999);\n",
+                        "session.log(\"\ud83d\udcdc Scroll to bottom executed from within scroll panel\");\n",
+                        "\n",
+                        "// Also log current position for debugging\n",
+                        "Integer currentPos = this.getScrollPositionVertical();\n",
+                        "session.log(\"\ud83d\udcca Current scroll position after scroll: \" + currentPos);\n",
+                        "\n",
+                        "ScrollPanel scrollPanel = this;\n",
+                        "Integer scrollHeight = scrollPanel.getScrollPositionVertical(); // Max possible\n",
+                        "session.log(\"\ud83d\udccf Container can scroll. Max height check needed\");\n",
+                        "\n",
+                        "// Try getting inner panel to check content size\n",
+                        "Panel innerPanel = scrollPanel.getInnerPanel();\n",
+                        "session.log(\"\ud83d\udce6 Inner panel: \" + innerPanel.getId());"
+                      ],
+                      "linkedVariables":[],
+                      "name":"onKey"
+                    }
+                  ]
+                },
+                "child":"Html2",
+                "halign":1,
+                "innerHeight":839,
+                "innerMaxHeight":-1,
+                "innerMaxWidth":-1,
+                "innerMinHeight":839,
+                "innerMinWidth":838,
+                "innerWidth":838,
+                "left":0.0,
+                "top":839.0,
+                "upid":"Scroll1",
+                "valign":3
+              }
+            },
+            {
+              "portletBuilderId":"amistatictreemap",
+              "portletConfig":{
+                "amiColors":[],
+                "amiGrouping":"symbol",
+                "amiHeat":"max(changePercent)",
+                "amiLabel":"",
+                "amiPanelId":"marketdata1",
+                "amiSize":"max(volume)",
+                "amiStickyness":5,
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "amiTip":"max(symbol)",
+                "amiTitle":"marketdata",
+                "dm":[
+                  {
+                    "dmadn":"marketdata1",
+                    "dmtbid":["marketdata"]
+                  }
+                ],
+                "fontSize":13,
+                "ratio":1.0,
+                "titlePnl":{"title":"marketdata"},
+                "upid":"marketdata1",
+                "varTypes":{"changePercent":"Float","symbol":"String","volume":"Integer"}
+              }
+            },
+            {
+              "portletBuilderId":"amistatictable",
+              "portletConfig":{
+                "amiCols":[
+                  {
+                    "cl":"m",
+                    "ei":"",
+                    "eof":"",
+                    "fm":"id",
+                    "fw":false,
+                    "hs":"",
+                    "id":"id",
+                    "lnd":0,
+                    "location":0,
+                    "pc":0,
+                    "tl":"Id",
+                    "tp":"numeric",
+                    "width":40
+                  },
+                  {"fm":"timestamp","fw":false,"id":"timestamp","lnd":0,"location":1,"pc":0,"tl":"Timestamp","tp":"numeric","width":240},
+                  {
+                    "cl":"m",
+                    "ei":"",
+                    "eof":"",
+                    "fm":"symbol",
+                    "fw":false,
+                    "hs":"",
+                    "id":"symbol",
+                    "lnd":0,
+                    "location":2,
+                    "pc":0,
+                    "tl":"Symbol",
+                    "tp":"text",
+                    "width":171
+                  },
+                  {"fm":"price","fw":false,"id":"price","lnd":0,"location":3,"tl":"Price","tp":"numeric","width":145},
+                  {"fm":"volume","fw":false,"id":"volume","lnd":0,"location":4,"pc":0,"tl":"Volume","tp":"numeric","width":167},
+                  {"fm":"side","fw":false,"id":"side","lnd":0,"location":5,"tl":"Side","tp":"text","width":126},
+                  {
+                    "cl":"m",
+                    "ei":"",
+                    "eof":"",
+                    "fm":"trader",
+                    "fw":false,
+                    "hs":"",
+                    "id":"trader",
+                    "lnd":0,
+                    "location":6,
+                    "pc":0,
+                    "tl":"Trader",
+                    "tp":"text",
+                    "width":247
+                  },
+                  {
+                    "cl":"m",
+                    "ei":"",
+                    "eof":"",
+                    "fm":"desk",
+                    "fw":false,
+                    "hs":"",
+                    "id":"desk",
+                    "lnd":0,
+                    "location":7,
+                    "tl":"Desk",
+                    "tp":"text",
+                    "width":86
+                  },
+                  {
+                    "cl":"m",
+                    "ei":"",
+                    "eof":"",
+                    "fm":"pnl",
+                    "fw":false,
+                    "hs":"",
+                    "id":"pnl",
+                    "lnd":0,
+                    "location":8,
+                    "tl":"Pnl",
+                    "tp":"numeric",
+                    "width":60
+                  },
+                  {"id":"D","width":100}
+                ],
+                "amiPanelId":"trades2",
+                "amiStyle":{
+                  "bgCl":"#ffffff",
+                  "cellBdrCl":"#dee2e6",
+                  "cellPadHt":6.0,
+                  "flashDnCl":"#dc3545",
+                  "flashUpCl":"#28a745",
+                  "fontCl":"#212529",
+                  "fontFam":"Arial",
+                  "fontSz":12.0,
+                  "graybarCl":"#f8f9fa",
+                  "headerBgCl":"#f8f9fa",
+                  "headerFontCl":"#495057",
+                  "headerFontSz":12.0,
+                  "pdBtmPx":6.0,
+                  "pdTpPx":6.0,
+                  "pt":"LAYOUT_DEFAULT",
+                  "rowHt":28.0,
+                  "selCl":"#007bff"
+                },
+                "amiTitle":"trades",
+                "callbacks":{
+                  "entries":[
+                    {
+                      "amiscript":[
+                        "{\n",
+                        "    session.log(\"=== INTER-WIDGET COMMUNICATION START ===\");\n",
+                        "    session.log(\"Column clicked: \" + column + \", Value: \" + val);\n",
+                        "    \n",
+                        "    // Initialize custom dashboard manager\n",
+                        "    TradingDashboardManager manager = new TradingDashboardManager();\n",
+                        "    session.log(\"Dashboard manager initialized: \" + manager.debugInfo());\n",
+                        "    \n",
+                        "    // Get HTML panel for dynamic updates\n",
+                        "    FormPanel pn_Html1 = layout.getPanel(\"Html1\");\n",
+                        "    String panelTest = manager.testLayoutMethod(pn_Html1);\n",
+                        "    session.log(\"Panel access test: \" + panelTest);\n",
+                        "    \n",
+                        "    // Check if trader column was clicked\n",
+                        "    if (column == \"Trader\") {\n",
+                        "        session.log(\"Trader selected: \" + val);\n",
+                        "        \n",
+                        "        // Generate custom trader HTML using our Java class\n",
+                        "        String traderHtml = manager.generateTraderHtml(val);\n",
+                        "        session.log(\"Generated trader HTML for: \" + val + \" (\" + traderHtml.length() + \" characters)\");\n",
+                        "        \n",
+                        "        // Update HTML panel with trader metrics\n",
+                        "        pn_Html1.setHtml(traderHtml);\n",
+                        "        session.log(\"Updated HTML panel with trader metrics\");\n",
+                        "        \n",
+                        "        // Create filter parameters for the P&L chart\n",
+                        "        Map filterParams = new Map();\n",
+                        "        filterParams.put(\"WHERE\", \"trader = '\" + val + \"'\");\n",
+                        "        \n",
+                        "        // Update the P&L chart with trader filter\n",
+                        "        Datamodel dm_trades3 = layout.getDatamodel(\"trades3\");\n",
+                        "        dm_trades3.process(filterParams);\n",
+                        "        \n",
+                        "        // Update heatmap to show only symbols trader has traded\n",
+                        "        Map heatmapParams = new Map();\n",
+                        "        String heatmapWhereClause = \"symbol IN (SELECT DISTINCT symbol FROM trades WHERE trader = '\" + val + \"')\";\n",
+                        "        heatmapParams.put(\"WHERE\", heatmapWhereClause);\n",
+                        "        \n",
+                        "        session.log(\"HEATMAP DEBUG: Starting heatmap update for trader: \" + val);\n",
+                        "        session.log(\"HEATMAP WHERE: \" + heatmapWhereClause);\n",
+                        "        \n",
+                        "        String testSubquery = \"SELECT DISTINCT symbol FROM trades WHERE trader = '\" + val + \"'\";\n",
+                        "        session.log(\"TESTING SUBQUERY: \" + testSubquery);\n",
+                        "        \n",
+                        "        session.log(\"BEFORE: Processing heatmap datamodel...\");\n",
+                        "        Datamodel dm_marketdata1 = layout.getDatamodel(\"marketdata1\");\n",
+                        "        dm_marketdata1.process(heatmapParams);\n",
+                        "        session.log(\"AFTER: Heatmap datamodel processed successfully\");\n",
+                        "        \n",
+                        "        session.log(\"HEATMAP DEBUG: Complete - P&L chart and heatmap updated for trader: \" + val);\n",
+                        "        \n",
+                        "    } else {\n",
+                        "        session.log(\"Non-trader column clicked - resetting to show all data\");\n",
+                        "        \n",
+                        "        // Reset HTML panel to default state\n",
+                        "        String defaultHtml = \"<div style='padding: 20px; text-align: center; font-family: Arial; color: #666;'>Click a trader to see metrics</div>\";\n",
+                        "        pn_Html1.setHtml(defaultHtml);\n",
+                        "        \n",
+                        "        // Reset filter to show all traders\n",
+                        "        Map resetParams = new Map();\n",
+                        "        resetParams.put(\"WHERE\", \"true\");\n",
+                        "        \n",
+                        "        Datamodel dm_trades3_reset = layout.getDatamodel(\"trades3\");\n",
+                        "        Datamodel dm_marketdata1_reset = layout.getDatamodel(\"marketdata1\");\n",
+                        "        dm_trades3_reset.process(resetParams);\n",
+                        "        dm_marketdata1_reset.process(resetParams);\n",
+                        "        \n",
+                        "        session.log(\"Chart, heatmap and HTML panel reset to show all data\");\n",
+                        "    }\n",
+                        "    \n",
+                        "    session.log(\"=== INTER-WIDGET COMMUNICATION END ===\");\n",
+                        "}"
+                      ],
+                      "linkedVariables":[],
+                      "name":"onCellClicked"
+                    }
+                  ]
+                },
+                "curtimeUpdateFrequency":1000,
+                "dm":[
+                  {
+                    "dmadn":"trades2",
+                    "dmtbid":["trades"]
+                  }
+                ],
+                "dynamicColumns":"false",
+                "editDblClk":true,
+                "editInplace":false,
+                "editMenuTitle":"Edit Row(s)",
+                "editMode":0,
+                "editRerunDM":true,
+                "filters":{},
+                "pinCnt":0,
+                "rollupEnabled":false,
+                "scrollToBottomOnAppend":false,
+                "showCommandMenu":true,
+                "showLastRuntime":true,
+                "titlePnl":{"title":"trades"},
+                "upid":"trades2",
+                "varTypes":{
+                  "desk":"String",
+                  "id":"Integer",
+                  "pnl":"Float",
+                  "price":"Float",
+                  "side":"String",
+                  "symbol":"String",
+                  "timestamp":"Integer",
+                  "trader":"String",
+                  "volume":"Integer"
+                }
+              }
+            },
+            {
+              "portletBuilderId":"amichartgrid",
+              "portletConfig":{
+                "amiPanelId":"trades3",
+                "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                "amiTitle":"pnl_by_trader",
+                "axisBcnts":[1],
+                "axisConfig":{
+                  "B_0_0":{
+                    "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                    "autoMajorValue":true,
+                    "autoMaxValue":true,
+                    "autoMinValue":true,
+                    "autoMinorValue":true,
+                    "axisId":3,
+                    "fontStyle":"",
+                    "format":null,
+                    "formatType":5,
+                    "isGroupOrdered":true,
+                    "orientation":"T",
+                    "reverse":false,
+                    "title":""
+                  },
+                  "L_0_0":{
+                    "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                    "autoMajorValue":true,
+                    "autoMaxValue":true,
+                    "autoMinValue":true,
+                    "autoMinorValue":true,
+                    "axisId":2,
+                    "fontStyle":"",
+                    "format":null,
+                    "formatType":5,
+                    "isGroupOrdered":true,
+                    "orientation":"R",
+                    "reverse":true,
+                    "title":""
+                  }
+                },
+                "axisLcnts":[1],
+                "axisRcnts":[0],
+                "axisTcnts":[0],
+                "colsCount":1,
+                "dm":[
+                  {
+                    "dmadn":"trades3",
+                    "dmtbid":["pnl_by_trader"]
+                  }
+                ],
+                "mdivs":[
+                  {
+                    "mdivs":[
+                      {
+                        "mdivs":[
+                          {"p":-1,"w":1.0}
+                        ],
+                        "p":70,
+                        "w":1.0
+                      },
+                      {"p":-1,"w":1.0}
+                    ],
+                    "p":-1,
+                    "w":1.0
+                  },
+                  {
+                    "mdivs":[
+                      {
+                        "mdivs":[
+                          {"p":-1,"w":1.0}
+                        ],
+                        "p":70,
+                        "w":1.0
+                      },
+                      {
+                        "mdivs":[
+                          {"p":-1,"w":1.0}
+                        ],
+                        "p":-1,
+                        "w":1.0
+                      }
+                    ],
+                    "p":70,
+                    "w":1.0
+                  }
+                ],
+                "plotConfig":{
+                  "0_0":{
+                    "bgColor":"#ffffff",
+                    "layers":[
+                      {
+                        "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+                        "dmTableName":"pnl_by_trader",
+                        "dmadn":"trades3",
+                        "id":0,
+                        "layers":[
+                          {
+                            "editorType":"2dBarV",
+                            "id":4,
+                            "mColor":{"type":"custom","value":"total_pnl >= 0 ? \"#28a745\" : \"#dc3545\""},
+                            "mLeft":".1",
+                            "mRight":".9",
+                            "mShape":"\"square\"",
+                            "name":"trader",
+                            "orderBy":"total_pnl",
+                            "seriesName":"Layer",
+                            "tooltip":"\"X: \"+trader+\"<BR>Y: \"+formatNumber(total_pnl, \"#.000\", \"\")",
+                            "vStackOn":"total_pnl",
+                            "xLbl":"trader"
+                          }
+                        ],
+                        "name":"Layer",
+                        "opac":100,
+                        "type":"Chart",
+                        "xAxisId":3,
+                        "yAxisId":2
+                      }
+                    ],
+                    "plotId":1,
+                    "selBoxBorderColor":"#404040ef",
+                    "selBoxFillColor":"#40404007",
+                    "selColor":"#bacbfb6e"
+                  }
+                },
+                "rowsCount":1,
+                "titlePnl":{"title":"pnl_by_trader"},
+                "upid":"trades3"
+              }
+            }
+          ]
+        },
+        "location":"test",
+        "type":"ABSOLUTE"
+      }
+    ],
+    "rootLayout":{"location":"test","type":"ABSOLUTE"}
+  }

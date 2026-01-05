@@ -1,95 +1,38 @@
-# Java/Gradle Build Files
+# Java / Gradle
 build/
 .gradle/
 *.class
 *.jar
-!libs/*.jar
-gradle-app.setting
-!gradle-wrapper.jar
-.gradletasknamecache
-
-# IDE Files
-.idea/
-*.iml
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Local Configuration (contains local paths)
-local.properties
-
-# 3forge Temporary/Cache Files
-*.log
-*.tmp
-temp/
-logs/
-
-# Database Files (remove this line if you want to commit sample data)
-*.sqlite
-*.db
-
-# Output/Generated Files
-out/
-target/
 *.war
 *.ear
-*.nar
+*.iml
+out/
 
-# Java Memory Dumps
-*.hprof
-
-# Maven (if you ever use it)
-.m2/
-
-# Backup Files
-*.bak
-*.backup
-*.orig
-
-# Environment/Secret Files
-.env
-*.key
-*.pem
-
-# Testing
-.coverage
-coverage/
-
-# Local Development
-scratch/
-test-output/
-
-# Environment variables
-.env
+# 3forge
+data/autosave/
+data/idfountain/
+*.log
 
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
+venv/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# React build outputs (deployed to resources/)
+resources/forge-react.js
+resources/forge-react.css
+
+# Note: react-components/ has its own .gitignore for node_modules
