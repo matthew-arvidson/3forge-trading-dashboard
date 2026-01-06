@@ -120,6 +120,31 @@ onAmiJsCallback(action, param) {
 }
 ```
 
+### **🔧 Critical Setup: Panel Visibility on Startup**
+
+**IMPORTANT**: To ensure React panels display correctly when the dashboard loads, you **must** call the panel's `onVisible` method in the dashboard's `onUserPrefsLoaded()` callback.
+
+**How to configure:**
+1. Go to **Dashboard → Custom Callbacks**
+2. Find or create the **`onUserPrefsLoaded()`** callback
+3. Add `invokeCallback("onVisible", true)` for each React panel
+
+**Example:**
+```javascript
+onUserPrefsLoaded() {
+    // Ensure React panels are visible on dashboard load
+    agGrid.invokeCallback("onVisible", true);
+    reactPanel.invokeCallback("onVisible", true);
+    
+}
+    // Your other initialization logic should go in the html panels amiscript section
+    // specifically the onVisible callBack.
+    __ReactGui.mountComponent("agGrid", "AgGrid", {...});
+    __ReactGui.mountComponent("reactPanel", "HelloWorld", {...});
+```
+
+**Why this is needed:** to ensure your React components mount correctly on page load.
+
 ### **⚠️ Container Requirements:**
 **CRITICAL**: The Div container **must have explicit width and height** set:
 ```
