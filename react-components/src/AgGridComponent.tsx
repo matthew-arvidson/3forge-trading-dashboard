@@ -1,7 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+// Import CSS as inline strings for Shadow DOM
+import agGridCoreCss from 'ag-grid-community/styles/ag-grid.css?inline';
+import agGridAlpineCss from 'ag-grid-community/styles/ag-theme-alpine.css?inline';
+import agGridCustomCss from './ag-grid-custom.css?inline';
+
+// Export combined CSS for Shadow DOM injection
+export const styles = agGridCoreCss + '\n' + agGridAlpineCss + '\n' + agGridCustomCss;
 
 interface AgGridComponentProps {
   elementId?: string;

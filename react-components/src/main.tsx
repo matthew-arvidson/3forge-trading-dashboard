@@ -1,145 +1,7 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import HelloWorld from './HelloWorld';
-import AgGridComponent from './AgGridComponent';
-import { agGridCSS } from './ag-grid-styles';
-
-// Import AG-Grid CSS for Shadow DOM injection
-import agGridCoreCss from 'ag-grid-community/styles/ag-grid.css?inline';
-import agGridAlpineCss from 'ag-grid-community/styles/ag-theme-alpine.css?inline';
-
-// CSS will be injected inline for Shadow DOM
-// In production, you'd use a CSS loader or fetch strategy
-const componentStyles = `
-.hello-world {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  color: white;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  max-width: 600px;
-}
-
-.hello-world h1 {
-  margin: 0 0 16px 0;
-  font-size: 32px;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.user-name {
-  font-size: 18px;
-  margin: 0 0 24px 0;
-  opacity: 0.9;
-}
-
-.counter-section {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
-  backdrop-filter: blur(10px);
-}
-
-.counter-btn {
-  background: white;
-  color: #667eea;
-  border: none;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.counter-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-}
-
-.counter-btn:active {
-  transform: translateY(0);
-}
-
-.counter-text {
-  margin: 12px 0 0 0;
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-.timestamp {
-  margin: 16px 0;
-  font-size: 14px;
-  font-style: italic;
-  opacity: 0.8;
-}
-
-.forge-items-section {
-  background: rgba(255, 255, 255, 0.15);
-  padding: 16px;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.dropdown-label {
-  display: block;
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 8px;
-  opacity: 0.9;
-}
-
-.forge-dropdown {
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: white;
-  color: #667eea;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.forge-dropdown:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-.forge-dropdown:focus {
-  outline: none;
-  border-color: white;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-}
-
-.selected-item {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: rgba(40, 167, 69, 0.3);
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.callback-indicator {
-  font-size: 12px;
-  opacity: 0.8;
-  font-style: italic;
-  margin-left: 8px;
-}
-
-.success-badge {
-  background: rgba(40, 167, 69, 0.9);
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 20px;
-  font-size: 16px;
-}
-`;
+import HelloWorld, { styles as helloWorldStyles } from './HelloWorld';
+import AgGridComponent, { styles as agGridStyles } from './AgGridComponent';
 
 /**
  * 3forge React Integration - Main Entry Point
@@ -152,6 +14,12 @@ const componentStyles = `
 const COMPONENTS: Record<string, React.ComponentType<any>> = {
   HelloWorld: HelloWorld,
   AgGrid: AgGridComponent
+};
+
+// Styles registry - must match component names above
+const COMPONENT_STYLES: Record<string, string> = {
+  HelloWorld: helloWorldStyles,
+  AgGrid: agGridStyles
 };
 
 // Track mounted instances for cleanup
@@ -199,12 +67,13 @@ function mount(elementId: string, componentName: string, props: any = {}): void 
       // Inject component CSS into shadow root
       const styleElement = document.createElement('style');
       
-      // For AG-Grid, inject full AG-Grid CSS + custom overrides
-      if (componentName === 'AgGrid') {
-        styleElement.textContent = agGridCoreCss + '\n' + agGridAlpineCss + '\n' + agGridCSS + '\n' + componentStyles;
-        console.log('📦 Injected AG-Grid CSS into Shadow DOM (full styles)');
-      } else {
+      // Get styles from registry
+      const componentStyles = COMPONENT_STYLES[componentName];
+      if (componentStyles) {
         styleElement.textContent = componentStyles;
+        console.log(`📦 Injected ${componentName} CSS into Shadow DOM`);
+      } else {
+        console.log(`ℹ️ No styles registered for ${componentName}`);
       }
       
       shadowRoot.appendChild(styleElement);

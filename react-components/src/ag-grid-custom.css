@@ -1,9 +1,6 @@
-// AG-Grid custom overrides - Core AG-Grid CSS is loaded separately
-// These are just visual tweaks on top of AG-Grid's base styles
-export const agGridCSS = `
 /* ============================================
-   AG-Grid Custom Overrides
-   (Base AG-Grid CSS is already loaded)
+   AG-Grid Custom Overrides for 3forge
+   (Applied on top of AG-Grid's base styles)
    ============================================ */
 
 /* Enhanced spacing and colors */
@@ -36,4 +33,4 @@ export const agGridCSS = `
 .ag-theme-alpine .ag-cell:focus {
   outline: none;
 }
-`;
+

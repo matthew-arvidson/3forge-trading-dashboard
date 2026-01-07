@@ -1,5 +1,8 @@
 import React from 'react';
-import './HelloWorld.css';
+import helloWorldCss from './HelloWorld.css?inline';
+
+// Export CSS for Shadow DOM injection
+export const styles = helloWorldCss;
 
 interface HelloWorldProps {
   message?: string;
