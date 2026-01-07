@@ -578,7 +578,7 @@
                   "heightDflt":333,
                   "hidden":false,
                   "leftDflt":40,
-                  "portlet":"Div5",
+                  "portlet":"Div6",
                   "pos":2,
                   "stateDflt":"flt",
                   "title":"React Components",
@@ -652,6 +652,19 @@
               "locked":false,
               "offset":0.45377,
               "upid":"Div5"
+            }
+          },
+          {
+            "portletBuilderId":"div",
+            "portletConfig":{
+              "amiPanelId":"Div6",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "child1":"Div5",
+              "child2":"Html6",
+              "dir":"h",
+              "locked":false,
+              "offset":0.83539,
+              "upid":"Div6"
             }
           },
           {
@@ -739,8 +752,17 @@
                     "name":"onVisible"
                   },
                   {
-                    "amiscript":"session.alert(\"Callback: \" + action + \" \" + params.toJson());",
-                    "linkedVariables":[],
+                    "amiscript":[
+                      "if(action == \"rowClicked\") {\n",
+                      "  String symbol = params.get(0)[\"symbol\"];\n",
+                      "  string price = params.get(0)[\"price\"];\n",
+                      "  string qty = params.get(0)[\"quantity\"];\n",
+                      "  selectedRow.setValue(\"Symbol: \" + symbol + \" Price: \" + price + \" Qty:\" + qty);\n",
+                      "}"
+                    ],
+                    "linkedVariables":[
+                      {"ari":"FIELD:Html6?selectedRow","varName":"selectedRow"}
+                    ],
                     "name":"onAmiJsCallback"
                   }
                 ]
@@ -767,7 +789,7 @@
                       "myItems.add(\"Elderberry\");\n",
                       "\n",
                       "\n",
-                      "__ReactGui.mountComponent(\"reactApp1\", \"HelloWorld\", {\"userName\": \"Matt\", \"message\": \"TEST MESSAGE\", \n",
+                      "__ReactGui.mountComponent(\"reactApp1\", \"HelloWorld\", {\"userName\": session.getUsername(), \"message\": \"TEST EDIT MESSAGE\", \n",
                       "  \"forgeItems\": myItems,\n",
                       "  \"elementId\": \"reactApp1\"\n",
                       "});\n",
@@ -777,8 +799,20 @@
                     "name":"onVisible"
                   },
                   {
-                    "amiscript":"session.alert(\"Callback: \" + action + \" \" + params.toJson());",
-                    "linkedVariables":[],
+                    "amiscript":[
+                      "if(action == \"buttonClicked\") {\n",
+                      "  String newCount = params.get(0);\n",
+                      "  countFromReact.setValue(newCount);\n",
+                      "} else if (action == \"itemSelected\") {\n",
+                      "  String newItem = params.get(0);\n",
+                      "  selectedItemFromReact.setValue(newItem);\n",
+                      "}"
+                    ],
+                    "linkedVariables":[
+                      {"ari":"FIELD:Html6?countFromReact","varName":"countFromReact"},
+                      {"ari":"FIELDVALUE:Html6?countFromReact?","varName":"forgeCount"},
+                      {"ari":"FIELD:Html6?selectedItemFromReact","varName":"selectedItemFromReact"}
+                    ],
                     "name":"onAmiJsCallback"
                   }
                 ]
@@ -786,6 +820,55 @@
               "htmlTemplate2":"<div id=\"reactApp1\"></div>",
               "snap":20,
               "upid":"Html5"
+            }
+          },
+          {
+            "portletBuilderId":"amiform",
+            "portletConfig":{
+              "amiPanelId":"Html6",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "fields":[
+                {
+                  "disabled":true,
+                  "dme":"0",
+                  "heightPx":20,
+                  "l":"Count From React Component ",
+                  "leftPosPx":280,
+                  "n":"countFromReact",
+                  "style":{"pt":"LAYOUT_DEFAULT"},
+                  "t":"textField",
+                  "topPosPx":80,
+                  "widthPx":199,
+                  "zidx":1
+                },
+                {
+                  "disabled":true,
+                  "heightPx":20,
+                  "l":"Selected Item From React Component ",
+                  "leftPosPx":720,
+                  "n":"selectedItemFromReact",
+                  "style":{"pt":"LAYOUT_DEFAULT"},
+                  "t":"textField",
+                  "topPosPx":80,
+                  "widthPx":200,
+                  "zidx":2
+                },
+                {
+                  "disabled":true,
+                  "heightPx":20,
+                  "l":"Selected Row from AG Grid ",
+                  "leftPosPx":1120,
+                  "n":"selectedRow",
+                  "style":{"pt":"LAYOUT_DEFAULT"},
+                  "t":"textField",
+                  "topPosPx":80,
+                  "widthPx":240,
+                  "zidx":3
+                }
+              ],
+              "htmlTemplate2":"<h1 style=\"position: absolute;left: 100px;\">3Forge Panel</h1>",
+              "snap":20,
+              "upid":"Html6"
             }
           },
           {
@@ -830,7 +913,7 @@
               "innerMinWidth":838,
               "innerWidth":838,
               "left":0.0,
-              "top":839.0,
+              "top":143.0,
               "upid":"Scroll1",
               "valign":3
             }
