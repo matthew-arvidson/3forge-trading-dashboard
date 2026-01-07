@@ -58,6 +58,8 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 ### 🎯 **Custom React Components in 3forge**
 **Implementation**: Clean, simple architecture for embedding React components with bidirectional communication.
 
+![React 3forge Integration Example](assets/react_3forge_example.png)
+
 ### **Components Available:**
 1. **HelloWorld**: Demo component showing prop passing, state management, and event callbacks
 2. **AG-Grid**: Production-ready data grid with sorting, filtering, row selection, and event handling
