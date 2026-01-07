@@ -31,15 +31,28 @@ const mountedInstances = new Map<string, { root: Root; shadowRoot: ShadowRoot }>
  * @param elementId - The ID of the div element in 3forge dashboard
  * @param componentName - Name of component from registry (e.g., "HelloWorld")
  * @param props - Props to pass to the component
+ * @param retries - Number of retries if element not found (internal use)
  */
-function mount(elementId: string, componentName: string, props: any = {}): void {
+function mount(elementId: string, componentName: string, props: any = {}, retries: number = 10): void {
   console.log(`🚀 ForgeReact.mount called:`, { elementId, componentName, props });
   
   // Get the target element
   const element = document.getElementById(elementId);
   if (!element) {
-    console.error(`❌ Element with id "${elementId}" not found`);
+    if (retries > 0) {
+      // Element not ready yet, retry after delay
+      console.log(`⏳ Element "${elementId}" not ready, retrying... (${retries} attempts left)`);
+      setTimeout(() => mount(elementId, componentName, props, retries - 1), 150);
+      return;
+    }
+    // Exhausted all retries
+    console.error(`❌ Element with id "${elementId}" not found after 10 attempts (1.5 seconds)`);
     return;
+  }
+  
+  // Log success if we had to retry
+  if (retries < 10) {
+    console.log(`✅ Element "${elementId}" found after ${10 - retries} retries`);
   }
   
   // Get component from registry
