@@ -124,7 +124,7 @@ onAmiJsCallback(action, param) {
 
 ### **🔧 Critical Setup: Panel Visibility on Startup**
 
-**IMPORTANT**: To ensure React panels display correctly when the dashboard loads, you **must** call the panel's `onVisible` method in the dashboard's `onUserPrefsLoaded()` callback.
+**IMPORTANT**: To ensure React panels display correctly when the dashboard loads, you **must** call the panel's `onVisible` method in the dashboard's `onUserPrefsLoaded()` callback. if you are populating the ag-grid with data from a datamodel, you should put it in the datamodels onComplete method instead.  
 
 **How to configure:**
 1. Go to **Dashboard → Custom Callbacks**

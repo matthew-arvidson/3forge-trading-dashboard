@@ -8,9 +8,14 @@
           "callbacks":{
             "entries":[
               {
-                "amiscript":["agGrid.invokeCallback(\"onVisible\", true);\n","reactPanel.invokeCallback(\"onVisible\", true);"],
+                "amiscript":[
+                  "agGrid.invokeCallback(\"onVisible\", true);\n",
+                  "reactPanel.invokeCallback(\"onVisible\", true);\n",
+                  "agGridWithDm.invokeCallback(\"onVisible\", true);"
+                ],
                 "linkedVariables":[
                   {"ari":"PANEL:Html4","varName":"agGrid"},
+                  {"ari":"PANEL:Html7","varName":"agGridWithDm"},
                   {"ari":"PANEL:Html5","varName":"reactPanel"}
                 ],
                 "name":"onUserPrefsLoaded"
@@ -330,7 +335,9 @@
                       ],
                       "hasDatamodel":true,
                       "inputDm":["trades"],
-                      "linkedVariables":[],
+                      "linkedVariables":[
+                        {"ari":"PANEL:Html7","varName":"agGridWithDm"}
+                      ],
                       "name":"onProcess",
                       "schema":{
                         "tbl":[
@@ -348,6 +355,14 @@
                           }
                         ]
                       }
+                    },
+                    {
+                      "amiscript":"agGridWithDm.invokeCallback(\"onVisible\", true);",
+                      "hasDatamodel":true,
+                      "linkedVariables":[
+                        {"ari":"PANEL:Html7","varName":"agGridWithDm"}
+                      ],
+                      "name":"onComplete"
                     }
                   ]
                 },
@@ -660,11 +675,24 @@
               "amiPanelId":"Div6",
               "amiStyle":{"pt":"LAYOUT_DEFAULT"},
               "child1":"Div5",
-              "child2":"Html6",
+              "child2":"Div7",
               "dir":"h",
               "locked":false,
-              "offset":0.83539,
+              "offset":0.52236,
               "upid":"Div6"
+            }
+          },
+          {
+            "portletBuilderId":"div",
+            "portletConfig":{
+              "amiPanelId":"Div7",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "child1":"Html6",
+              "child2":"Html7",
+              "dir":"v",
+              "locked":false,
+              "offset":0.45322,
+              "upid":"Div7"
             }
           },
           {
@@ -833,11 +861,11 @@
                   "dme":"0",
                   "heightPx":20,
                   "l":"Count From React Component ",
-                  "leftPosPx":280,
+                  "leftPosPx":200,
                   "n":"countFromReact",
                   "style":{"pt":"LAYOUT_DEFAULT"},
                   "t":"textField",
-                  "topPosPx":80,
+                  "topPosPx":120,
                   "widthPx":199,
                   "zidx":1
                 },
@@ -845,30 +873,90 @@
                   "disabled":true,
                   "heightPx":20,
                   "l":"Selected Item From React Component ",
-                  "leftPosPx":720,
+                  "leftPosPx":240,
                   "n":"selectedItemFromReact",
                   "style":{"pt":"LAYOUT_DEFAULT"},
                   "t":"textField",
-                  "topPosPx":80,
+                  "topPosPx":240,
                   "widthPx":200,
                   "zidx":2
                 },
                 {
                   "disabled":true,
                   "heightPx":20,
-                  "l":"Selected Row from AG Grid ",
-                  "leftPosPx":1120,
+                  "l":"Selected Row from AG Grid Top",
+                  "leftPosPx":200,
                   "n":"selectedRow",
                   "style":{"pt":"LAYOUT_DEFAULT"},
                   "t":"textField",
-                  "topPosPx":80,
+                  "topPosPx":160,
                   "widthPx":240,
                   "zidx":3
+                },
+                {
+                  "disabled":true,
+                  "heightPx":20,
+                  "l":"Selected Row from AG Grid bottom",
+                  "leftPosPx":220,
+                  "n":"selectedRow2",
+                  "style":{"pt":"LAYOUT_DEFAULT"},
+                  "t":"textField",
+                  "topPosPx":200,
+                  "widthPx":280,
+                  "zidx":4
                 }
               ],
               "htmlTemplate2":"<h1 style=\"position: absolute;left: 100px;\">3Forge Panel</h1>",
               "snap":20,
               "upid":"Html6"
+            }
+          },
+          {
+            "portletBuilderId":"amiform",
+            "portletConfig":{
+              "amiPanelId":"Html7",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "callbacks":{
+                "entries":[
+                  {
+                    "amiscript":[
+                      "String rows = dm_trades1.getData().get(\"trades\").toJson();\n",
+                      "// Define columns\n",
+                      "List columns = new List();\n",
+                      "columns.add({\"field\": \"trader\", \"headerName\": \"Trader\", \"width\": 150});\n",
+                      "columns.add({\"field\": \"desk\", \"headerName\": \"Desk\", \"width\": 150});\n",
+                      "columns.add({\"field\": \"total_pnl\", \"headerName\": \"Total PNL\", \"width\": 150});\n",
+                      "columns.add({\"field\": \"trade_count\", \"headerName\": \"Trade Count\", \"width\": 150});\n",
+                      "__ReactGui.mountComponent(\"gridApp2\", \"AgGrid\", {\n",
+                      "  \"columns\": columns,\n",
+                      "  \"rows\": rows\n",
+                      "});"
+                    ],
+                    "linkedVariables":[
+                      {"ari":"DATAMODEL:trades1","varName":"dm_trades1"},
+                      {"ari":"DATAMODEL:trades","varName":"trades"},
+                      {"ari":"DATAMODEL:trades2","varName":"trades2"}
+                    ],
+                    "name":"onVisible"
+                  },
+                  {
+                    "amiscript":[
+                      "if(action == \"rowClicked\") {\n",
+                      "  String trader = params.get(0)[\"trader\"];\n",
+                      "  string desk = params.get(0)[\"desk\"];\n",
+                      "  selectedRow2.setValue(\"Trader: \" + trader + \" Desk: \" + desk);\n",
+                      "}"
+                    ],
+                    "linkedVariables":[
+                      {"ari":"FIELD:Html6?selectedRow2","varName":"selectedRow2"}
+                    ],
+                    "name":"onAmiJsCallback"
+                  }
+                ]
+              },
+              "htmlTemplate2":"<div id=\"gridApp2\" style=\"height: 500px; width: 700px;\"></div>",
+              "snap":20,
+              "upid":"Html7"
             }
           },
           {
@@ -913,7 +1001,7 @@
               "innerMinWidth":838,
               "innerWidth":838,
               "left":0.0,
-              "top":143.0,
+              "top":839.0,
               "upid":"Scroll1",
               "valign":3
             }

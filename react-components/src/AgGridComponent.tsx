@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -43,8 +44,71 @@ export default function AgGridComponent({
     { symbol: 'MSFT', price: 310.75, quantity: 200 }
   ];
   
-  const columnDefs = columns.length > 0 ? columns : defaultColumns;
-  const rowData = rows.length > 0 ? rows : defaultRows;
+  /**
+   * Safe JSON parser for 3forge data models
+   * Handles both JSON strings and already-parsed objects/arrays
+   */
+  const safeJsonParse = (data: any, fallback: any[] = []): any[] => {
+    if (!data) {
+      console.log('🔍 safeJsonParse: data is null/undefined/empty');
+      return fallback;
+    }
+    
+    // If already an array, return it
+    if (Array.isArray(data)) {
+      console.log('🔍 safeJsonParse: data is already array, length:', data.length);
+      return data.length > 0 ? data : fallback;
+    }
+    
+    // If string, try to parse as JSON
+    if (typeof data === 'string') {
+      console.log('🔍 safeJsonParse: data is string, length:', data.length, 'preview:', data.substring(0, 100));
+      try {
+        const parsed = JSON.parse(data);
+        console.log('✅ safeJsonParse: parsed successfully, type:', Array.isArray(parsed) ? 'array' : typeof parsed, 'length:', Array.isArray(parsed) ? parsed.length : 'N/A');
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback;
+      } catch (e) {
+        console.error('❌ safeJsonParse: Failed to parse JSON:', e, 'data:', data);
+        return fallback;
+      }
+    }
+    
+    console.log('🔍 safeJsonParse: data is unexpected type:', typeof data);
+    return fallback;
+  };
+  
+  // Memoize parsed data to ensure React detects changes properly
+  const columnDefs = useMemo(() => {
+    const parsed = safeJsonParse(columns, defaultColumns);
+    console.log('🔄 AG-Grid: Columns updated:', parsed.length, 'columns');
+    return parsed;
+  }, [columns]);
+  
+  const rowData = useMemo(() => {
+    const parsed = safeJsonParse(rows, defaultRows);
+    console.log('🔄 AG-Grid: Rows updated:', parsed.length, 'rows');
+    return parsed;
+  }, [rows]);
+  
+  // Log when component receives new props (helps debug double-render issue)
+  useEffect(() => {
+    console.log('📊 AG-Grid props received - RAW VALUES:', {
+      elementId,
+      columns: columns,
+      rows: rows
+    });
+    
+    const parsedColumns = safeJsonParse(columns, []);
+    const parsedRows = safeJsonParse(rows, []);
+    
+    console.log('📊 AG-Grid props parsed:', {
+      elementId,
+      columnsRaw: Array.isArray(columns) ? `array[${columns.length}]` : typeof columns,
+      columnsParsed: parsedColumns.length,
+      rowsRaw: Array.isArray(rows) ? `array[${rows.length}]` : typeof rows,
+      rowsParsed: parsedRows.length
+    });
+  }, [elementId, columns, rows]);
   
   // Handle row click - send back to 3forge
   const handleRowClicked = (event: any) => {
