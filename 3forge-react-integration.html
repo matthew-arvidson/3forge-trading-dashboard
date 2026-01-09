@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bringing Modern React to 3forge AMI - A Better Approach</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .highlight-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .problem-box {
+            background: #fff3f3;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        ul {
+            margin: 15px 0 15px 30px;
+        }
+
+        li {
+            margin: 8px 0;
+            font-size: 1.05em;
+        }
+
+        pre {
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+
+        .code-label {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 8px 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: -10px;
+        }
+
+        .architecture-diagram {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 15px 20px;
+            margin: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 10px;
+        }
+
+        .screenshot-placeholder {
+            background: #f0f4ff;
+            border: 2px dashed #667eea;
+            padding: 60px;
+            text-align: center;
+            margin: 30px 0;
+            border-radius: 8px;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .component-card {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .component-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin: 30px 0;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+
+        footer {
+            background: #2d3748;
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Bringing Modern React to 3forge AMI</h1>
+            <p>A Clean, Simple Approach That Actually Works</p>
+        </header>
+
+        <div class="content">
+            <!-- INTRODUCTION -->
+            <section id="introduction">
+                <h2>The Problem</h2>
+                <p>
+                    3forge AMI is a powerful platform for building financial applications, but its UI components are... limited. 
+                    Meanwhile, the React ecosystem has incredible libraries like AG-Grid, Highcharts, and D3 that would be 
+                    perfect for trading dashboards.
+                </p>
+                
+                <div class="problem-box">
+                    <p><strong><span class="emoji">❌</span>What 3forge Developers Face:</strong></p>
+                    <ul>
+                        <li>Want modern UI components but stuck with basic native widgets</li>
+                        <li>Need enterprise grids (AG-Grid) but can't easily integrate them</li>
+                        <li>Want professional charts (Highcharts, D3) but no clean path</li>
+                        <li>Forced to write custom Java plugins for simple UI needs</li>
+                    </ul>
+                </div>
+
+                <p>
+                    <strong>The question:</strong> Can we bring the entire React ecosystem into 3forge without massive complexity?
+                </p>
+            </section>
+
+            <!-- THE CHALLENGE -->
+            <section id="challenge">
+                <h2>Why This is Hard</h2>
+                <ul>
+                    <li><strong>Style Isolation:</strong> 3forge's CSS can't interfere with React components</li>
+                    <li><strong>Single Runtime:</strong> React should load once, not per component</li>
+                    <li><strong>Simple API:</strong> 3forge developers shouldn't need extensive JavaScript knowledge</li>
+                    <li><strong>Bidirectional Data:</strong> Data needs to flow both ways seamlessly</li>
+                    <li><strong>Clean Deployment:</strong> Just drop a JAR, no complex setup</li>
+                </ul>
+            </section>
+
+            <!-- THE BREAKTHROUGH -->
+            <section id="breakthrough">
+                <h2>The Breakthrough</h2>
+
+                <div class="key-insight">
+                    💡 "What if we just put React on the window?"
+                </div>
+
+                <p>
+                    The solution turned out to be elegantly simple: Use <strong>Vite to bundle React as an IIFE</strong> 
+                    (Immediately Invoked Function Expression) that exposes a global API on <code>window.ForgeReact</code>.
+                </p>
+
+                <h3>The Key Decisions</h3>
+
+                <div class="success-box">
+                    <p><strong><span class="emoji">✅</span>What Made It Work:</strong></p>
+                    <ol>
+                        <li><strong>IIFE Bundle:</strong> Vite builds React to a single JS file that runs immediately and exposes <code>window.ForgeReact</code></li>
+                        <li><strong>Shadow DOM:</strong> Each component mounts in its own Shadow DOM for complete style isolation</li>
+                        <li><strong>Java Plugin:</strong> Simple plugin that injects the JS file and provides AmiScript API</li>
+                        <li><strong>Clean API:</strong> <code>react.mount('divId', 'ComponentName', props)</code> - that's it!</li>
+                    </ol>
+                </div>
+
+                <h3>Why This Works</h3>
+                <ul>
+                    <li><strong>Single React Runtime:</strong> Loads once globally, all components share it</li>
+                    <li><strong>No Build System for 3forge Devs:</strong> They just call a function, no webpack needed</li>
+                    <li><strong>Style Isolation:</strong> Shadow DOM prevents any CSS conflicts</li>
+                    <li><strong>Simple Deployment:</strong> Just one JAR with two JS files</li>
+                    <li><strong>Extensible:</strong> Add new React components without touching 3forge</li>
+                </ul>
+            </section>
+
+            <!-- ARCHITECTURE -->
+            <section id="architecture">
+                <h2>The Architecture</h2>
+
+                <div class="architecture-diagram">
+                    <div style="margin: 20px 0;">
+                        <div class="flow-step">React Components<br/>(TypeScript)</div>
+                        <div class="arrow">↓</div>
+                        <div class="flow-step">Vite Build<br/>(IIFE Bundle)</div>
+                        <div class="arrow">↓</div>
+                        <div class="flow-step">forge-react.js<br/>(window.ForgeReact)</div>
+                        <div class="arrow">↓</div>
+                        <div class="flow-step">ReactGuiService.js<br/>(Bridge Layer)</div>
+                        <div class="arrow">↓</div>
+                        <div class="flow-step">ReactGuiAdapter.java<br/>(Java Plugin)</div>
+                        <div class="arrow">↓</div>
+                        <div class="flow-step">__ReactGui.mountComponent()<br/>(AmiScript API)</div>
+                    </div>
+                    <p style="margin-top: 20px; color: #666; font-size: 0.95em;">
+                        <strong>Two JavaScript Files:</strong> forge-react.js (React bundle) + ReactGuiService.js (3forge bridge)
+                    </p>
+                </div>
+
+                <h3>Component 1: Vite Configuration</h3>
+                <p>The magic starts with Vite configured to output an IIFE:</p>
+
+                <div class="code-label">vite.config.ts</div>
+                <pre><code class="language-typescript">export default defineConfig({
+  build: {
+    lib: {
+      entry: './src/main.tsx',
+      name: 'ForgeReact',        // Global variable name
+      formats: ['iife'],         // IIFE format
+      fileName: () => 'forge-react.js'
+    },
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,  // Single file
+        globals: {}                   // No external deps
+      }
+    }
+  }
+});</code></pre>
+
+                <h3>Component 2: React Entry Point</h3>
+                <p>The main.tsx file exposes the mounting API:</p>
+
+                <div class="code-label">main.tsx</div>
+                <pre><code class="language-typescript">// Component registry
+const COMPONENTS = {
+  HelloWorld: HelloWorld,
+  AgGrid: AgGridComponent,
+  StockChart: StockChart,
+  TraderDetailsCard: TraderDetailsCard
+};
+
+function mount(elementId: string, componentName: string, props: any = {}) {
+  const element = document.getElementById(elementId);
+  const Component = COMPONENTS[componentName];
+  
+  // Create Shadow DOM for style isolation
+  const shadowRoot = element.attachShadow({ mode: 'open' });
+  
+  // Inject component CSS
+  const styleElement = document.createElement('style');
+  styleElement.textContent = COMPONENT_STYLES[componentName];
+  shadowRoot.appendChild(styleElement);
+  
+  // Mount React
+  const root = createRoot(shadowRoot);
+  root.render(&lt;Component {...props} /&gt;);
+}
+
+// Expose on window
+window.ForgeReact = {
+  mount,
+  unmount,
+  updateProps,
+  components: Object.keys(COMPONENTS)
+};</code></pre>
+
+                <h3>Component 3: Java Plugin</h3>
+                <p>The plugin bridges 3forge's Java backend to the React frontend. It consists of two parts:</p>
+
+                <h4 style="font-size: 1.2em; color: #764ba2; margin: 20px 0 10px 0;">Part A: Java Adapter</h4>
+                <p>Defines the AmiScript API and loads the JavaScript resources:</p>
+
+                <div class="code-label">ReactGuiAdapter.java</div>
+                <pre><code class="language-java">public class ReactGuiAdapter implements AmiWebGuiServiceAdapter {
+    
+    @Override
+    public String getAmiscriptClassname() {
+        return "ReactGui";  // Available as __ReactGui in AmiScript
+    }
+    
+    // Define methods callable from AmiScript
+    @Override
+    public List&lt;ParamsDefinition&gt; getAmiscriptMethods() {
+        return CH.l(
+            new ParamsDefinition("mountComponent", Object.class, 
+                "String elementId,String component,Object props")
+        );
+    }
+    
+    // Load JavaScript resources
+    @Override
+    public List&lt;String&gt; getJavascriptLibraries() {
+        return CH.l(
+            "http://localhost:33332/resources/forge-react.js",      // React bundle (IIFE)
+            "http://localhost:33332/resources/ReactGuiService.js"   // Bridge layer
+        );
+    }
+    
+    // Create the JavaScript bridge instance
+    @Override
+    public String getJavascriptNewInstance() {
+        return "new ReactGuiService()";
+    }
+    
+    // Forward AmiScript calls to JavaScript
+    @Override
+    public Object onAmiScriptMethod(String name, Object[] args) {
+        this.peer.executeJavascriptCallback(name, args);
+        return null;
+    }
+}</code></pre>
+
+                <h4 style="font-size: 1.2em; color: #764ba2; margin: 20px 0 10px 0;">Part B: JavaScript Bridge</h4>
+                <p>The browser-side bridge that connects <code>window.ForgeReact</code> to 3forge's peer system:</p>
+
+                <div class="code-label">resources/ReactGuiService.js</div>
+                <pre><code class="language-javascript">function ReactGuiService() {
+    this.peer = null;  // Will be injected by 3forge
+}
+
+// Required by 3forge - registers bidirectional communication
+ReactGuiService.prototype.registerAmiGuiServicePeer = function(peer) {
+    this.peer = peer;
+    console.log("✅ ReactGuiService ready!");
+};
+
+// Called from AmiScript: __ReactGui.mountComponent(...)
+ReactGuiService.prototype.mountComponent = function(elementId, componentName, props) {
+    // Check if ForgeReact bundle loaded
+    if (typeof window.ForgeReact === 'undefined') {
+        console.error("❌ ForgeReact bundle not loaded!");
+        return;
+    }
+    
+    // Inject elementId for callbacks
+    const propsWithElementId = {
+        ...props,
+        elementId: elementId
+    };
+    
+    // Delegate to window.ForgeReact.mount()
+    window.ForgeReact.mount(elementId, componentName, propsWithElementId);
+    console.log("✅ Component mounted:", componentName);
+};</code></pre>
+
+                <div class="highlight-box">
+                    <p><strong>🔑 Key Insight - The Two-Layer Bridge:</strong></p>
+                    <ol>
+                        <li><strong>forge-react.js (IIFE):</strong> Exposes <code>window.ForgeReact.mount()</code> - the raw React API</li>
+                        <li><strong>ReactGuiService.js:</strong> Wraps <code>window.ForgeReact</code> and connects it to 3forge's peer system</li>
+                        <li><strong>ReactGuiAdapter.java:</strong> Makes it accessible via <code>__ReactGui.mountComponent()</code> in AmiScript</li>
+                    </ol>
+                    <p>This layering keeps the React bundle pure (no 3forge dependencies) while the bridge handles integration.</p>
+                </div>
+
+                <h3>Component 4: 3forge Usage</h3>
+                <p>3forge developers access the API through <code>__ReactGui</code> (registered in the Java adapter):</p>
+
+                <div class="code-label">AmiScript in 3forge Dashboard (Div Panel)</div>
+                <pre><code class="language-javascript">// Get the ReactGui service instance
+reactGui = __ReactGui;
+
+// Mount a stock chart
+reactGui.mountComponent('chart-div', 'StockChart', {
+  symbol: 'BTC/USD',
+  data: priceData
+});
+
+// Mount a data grid
+reactGui.mountComponent('grid-div', 'AgGrid', {
+  columns: columns,
+  rows: rows
+});
+
+// Handle events from React components
+onAmiJsCallback(element, action, data) {
+  if (action == "rowClicked") {
+    // Update other panels with selected row data
+    trader = data.trader;
+    
+    // Update the trader details card
+    reactGui.mountComponent('card-div', 'TraderDetailsCard', {
+      trader: trader,
+      desk: data.desk,
+      total_pnl: data.total_pnl,
+      trade_count: data.trade_count
+    });
+  }
+}</code></pre>
+
+                <div class="highlight-box">
+                    <p><strong>📝 Note:</strong> The <code>__ReactGui</code> global is automatically available in all AmiScript contexts 
+                    once the plugin is registered in <code>ami-custom.local.properties</code>:</p>
+                    <pre style="background: #2d3748; color: #a0aec0; padding: 10px; border-radius: 4px; font-size: 0.9em;"><code>ami.guiservice.plugins=com.forge.trading.ReactGuiPlugin</code></pre>
+                </div>
+            </section>
+
+            <!-- THE COMPONENTS -->
+            <section id="components">
+                <h2>What We Built</h2>
+
+                <p>With this architecture in place, we built four React components that work seamlessly in 3forge:</p>
+
+                <div class="component-grid">
+                    <div class="component-card">
+                        <h4>📊 StockChart</h4>
+                        <p>Highstock financial chart with range selector and zoom</p>
+                    </div>
+                    <div class="component-card">
+                        <h4>📋 AgGrid</h4>
+                        <p>Enterprise data grid with sorting, filtering, and events</p>
+                    </div>
+                    <div class="component-card">
+                        <h4>💼 TraderDetailsCard</h4>
+                        <p>Dynamic card that updates on grid row selection</p>
+                    </div>
+                    <div class="component-card">
+                        <h4>👋 HelloWorld</h4>
+                        <p>Demo component showing state management</p>
+                    </div>
+                </div>
+
+                <h3>Example: Trader Details Card</h3>
+                <p>A compact card that displays trader metrics from grid selections:</p>
+
+                <div class="code-label">TraderDetailsCard.tsx</div>
+                <pre><code class="language-typescript">interface TraderDetailsCardProps {
+  trader?: string;
+  desk?: string;
+  total_pnl?: number;
+  trade_count?: number;
+}
+
+const TraderDetailsCard: React.FC&lt;TraderDetailsCardProps&gt; = ({
+  trader, desk, total_pnl, trade_count
+}) => {
+  const isProfitable = (total_pnl ?? 0) >= 0;
+  
+  return (
+    &lt;div className="trader-details-card"&gt;
+      &lt;div className="card-header"&gt;
+        &lt;h3&gt;📊 Trader Details&lt;/h3&gt;
+      &lt;/div&gt;
+      
+      {!trader ? (
+        &lt;div className="empty-state"&gt;
+          &lt;p&gt;Please select a trader&lt;/p&gt;
+        &lt;/div&gt;
+      ) : (
+        &lt;div className="card-content"&gt;
+          &lt;div&gt;Trader: {trader}&lt;/div&gt;
+          &lt;div&gt;Desk: {desk}&lt;/div&gt;
+          &lt;div className={isProfitable ? 'positive' : 'negative'}&gt;
+            P&L: ${total_pnl?.toFixed(2)}
+          &lt;/div&gt;
+          &lt;div&gt;Trades: {trade_count}&lt;/div&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+};</code></pre>
+            </section>
+
+            <!-- THE RESULTS -->
+            <section id="results">
+                <h2>The Results</h2>
+
+                <div style="margin: 30px 0; text-align: center;">
+                    <img src="assets/react_3forge_example.png" 
+                         alt="Complete trading dashboard with React components in 3forge" 
+                         style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <p style="margin-top: 15px; color: #666; font-style: italic;">
+                        Complete 3forge trading dashboard with React components: StockChart (Highstock), AgGrid, and TraderDetailsCard
+                    </p>
+                </div>
+
+                <h3>What We Achieved</h3>
+
+                <div class="success-box">
+                    <ul>
+                        <li><strong>4 Components:</strong> HelloWorld, AgGrid, StockChart, TraderDetailsCard</li>
+                        <li><strong>Zero Style Conflicts:</strong> Shadow DOM keeps everything isolated</li>
+                        <li><strong>Bidirectional Events:</strong> Grid clicks update cards, charts filter data</li>
+                        <li><strong>Simple Deployment:</strong> One JAR with two JS files - that's it</li>
+                        <li><strong>Developer Friendly:</strong> 3forge devs just call <code>__ReactGui.mountComponent()</code></li>
+                        <li><strong>Extensible:</strong> Adding new React components is trivial</li>
+                    </ul>
+                </div>
+
+            </section>
+
+            <!-- KEY TAKEAWAYS -->
+            <section id="takeaways">
+                <h2>Key Takeaways</h2>
+
+                <div class="highlight-box">
+                    <h3>The Bridge We Built</h3>
+                    <p>
+                        We didn't replace 3forge - we enhanced it. Native 3forge still handles queries, datamodels, 
+                        and backend logic. But now, for the UI layer, you can leverage the entire React ecosystem 
+                        without complex Java plugins.
+                    </p>
+                </div>
+
+                <div class="key-insight">
+                    🎯 The breakthrough: Stop fighting the system. Just put React on the window and call it a day.
+                </div>
+            </section>
+
+
+
+            <!-- CONCLUSION -->
+            <section id="conclusion">
+                <h2>Conclusion</h2>
+
+                <p>
+                    Integrating React into 3forge doesn't have to be complicated. By using a simple IIFE bundle 
+                    that exposes a global API, combined with Shadow DOM for isolation, we created a bridge that 
+                    lets 3forge developers leverage the entire React ecosystem with a single function call.
+                </p>
+
+                <div class="success-box">
+                    <p><strong>What We Proved:</strong></p>
+                    <p>
+                        Organizations can keep their 3forge backend expertise while adopting modern frontend tooling. 
+                        It's not React vs. 3forge - it's React <em>and</em> 3forge, working together through a 
+                        clean, simple interface.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+</body>
+</html>
+
