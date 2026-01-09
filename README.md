@@ -3,11 +3,11 @@
 ## 🎯 **Project Overview**
 Professional trading dashboard built with 3forge AMI, featuring **complete 4-panel inter-widget communication**, custom Java classes, automated build system, and enterprise-grade development workflow.
 
-## 🚀 **Current Status (PRODUCTION READY)**
+## 🚀 **Current Status**
 
 ### ✅ **Major Achievements:**
 - **🎉 COMPLETE 4-PANEL DASHBOARD**: Table clicking updates all panels simultaneously
-- **⚛️ CUSTOM REACT INTEGRATION**: HelloWorld & AG-Grid components with bidirectional communication
+- **⚛️ CUSTOM REACT INTEGRATION**:  Components with bidirectional communication
 - **📊 Dynamic HTML Panel**: Real-time trader performance cards with custom CSS styling
 - **🔥 Smart Heatmap Filtering**: Shows only symbols the selected trader has traded
 - **📈 Chart Integration**: P&L charts filter by trader selection
@@ -16,7 +16,7 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 
 ### ✅ **What's Working:**
 - **Trading Dashboard**: Complete 4-panel inter-widget communication system
-- **React Components**: HelloWorld (demo) + AG-Grid (production data grid) with Shadow DOM
+- **React Components**: HelloWorld (demo) + AG-Grid (data grid) + StockChart (Highstock) + TraderDetailsCard with Shadow DOM
 - **Custom Java Classes**: `TradingDashboardManager` (HTML generation) + `PanelManager` (panel utilities)
 - **React Plugin System**: `ReactGuiPlugin` + `ReactGuiAdapter` for seamless 3forge integration
 - **Data Sources**: SQLite database with trader-specific symbol preferences
@@ -25,7 +25,7 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 - **Reset Functionality**: Click any non-trader column to clear filters
 
 ### 🛠️ **Development Setup:**
-- **Production Mode**: `gradle buildProd` + `.\scripts\rebuild-prod.ps1`
+- **Build for Deployment**: `gradle buildProd` + `.\scripts\rebuild-prod.ps1`
 - **Development Mode**: `gradle buildDev` + `.\scripts\rebuild-dev.ps1` 
 - **Recovery**: `gradle restoreWorkingState` (bulletproof backup restore)
 
@@ -62,7 +62,9 @@ Professional trading dashboard built with 3forge AMI, featuring **complete 4-pan
 
 ### **Components Available:**
 1. **HelloWorld**: Demo component showing prop passing, state management, and event callbacks
-2. **AG-Grid**: Production-ready data grid with sorting, filtering, row selection, and event handling
+2. **AgGrid**: Advanced data grid with sorting, filtering, row selection, and event handling
+3. **StockChart**: Financial chart using Highstock with range selector, navigator, and zoom controls
+4. **TraderDetailsCard**: Dynamic trader metrics card that updates on grid row selection
 
 ### **Architecture:**
 - **Java Plugin**: `ReactGuiPlugin` + `ReactGuiAdapter` (AmiScript API)
@@ -263,7 +265,7 @@ Remove-Item -Path "C:\Program Files\ami" -Recurse -Force
 │   └── working-state-backup/ # Master backup directory
 ├── scripts/                 # PowerShell automation
 │   ├── rebuild-dev.ps1     # Development rebuild + restart
-│   └── rebuild-prod.ps1    # Production rebuild + restart
+│   └── rebuild-prod.ps1    # Build + restart
 ├── docs/                    # Documentation
 │   ├── TECHNICAL_GUIDE_COMPLETE.md # Technical implementation details
 │   ├── DATA_SOURCE_SETUP.md # Database setup guide
@@ -347,7 +349,7 @@ gradle restoreWorkingState
 - **TradingDashboardManager**: Main class for HTML generation and trader metrics calculation
   - `generateTraderHtml()`: Creates dynamic performance cards with CSS styling
   - `calculateTraderMetrics()`: Computes P&L, trade counts, win rates
-  - **Status**: Production - actively used in 4-panel dashboard
+  - **Status**: Actively used in 4-panel dashboard
 - **PanelManager**: Legacy utility class for panel manipulation via reflection
   - `updateHtmlPanel()`: Reflection-based panel content updates
   - `getPanelInfo()`: Debug utilities for panel introspection
@@ -377,9 +379,9 @@ gradle restoreWorkingState
 
 ---
 
-**🎉 Current State: PRODUCTION-READY DASHBOARD**
+**🎉 Current State: Complete Dashboard**
 - 4-panel inter-widget communication: ✅ 
-- React component integration (HelloWorld + AG-Grid): ✅
+- React component integration (HelloWorld + AgGrid + StockChart + TraderDetailsCard): ✅
 - Dynamic HTML panel generation: ✅
 - Smart heatmap filtering: ✅
 - Chart integration: ✅
