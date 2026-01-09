@@ -2,6 +2,8 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import HelloWorld, { styles as helloWorldStyles } from './HelloWorld';
 import AgGridComponent, { styles as agGridStyles } from './AgGridComponent';
+import StockChart, { styles as stockChartStyles } from './StockChart';
+import TraderDetailsCard, { styles as traderDetailsCardStyles } from './TraderDetailsCard';
 
 /**
  * 3forge React Integration - Main Entry Point
@@ -13,13 +15,17 @@ import AgGridComponent, { styles as agGridStyles } from './AgGridComponent';
 // Component registry - add new components here
 const COMPONENTS: Record<string, React.ComponentType<any>> = {
   HelloWorld: HelloWorld,
-  AgGrid: AgGridComponent
+  AgGrid: AgGridComponent,
+  StockChart: StockChart,
+  TraderDetailsCard: TraderDetailsCard
 };
 
 // Styles registry - must match component names above
 const COMPONENT_STYLES: Record<string, string> = {
   HelloWorld: helloWorldStyles,
-  AgGrid: agGridStyles
+  AgGrid: agGridStyles,
+  StockChart: stockChartStyles,
+  TraderDetailsCard: traderDetailsCardStyles
 };
 
 // Track mounted instances for cleanup
@@ -149,19 +155,8 @@ function updateProps(elementId: string, componentName: string, props: any): void
   mount(elementId, componentName, props);
 }
 
-// Export as global for 3forge JavaScript bridge
-declare global {
-  interface Window {
-    ForgeReact: {
-      mount: typeof mount;
-      unmount: typeof unmount;
-      updateProps: typeof updateProps;
-      components: string[];
-    };
-  }
-}
-
 // Directly set window.ForgeReact (IIFE will execute this)
+// TypeScript types are defined in vite-env.d.ts
 window.ForgeReact = {
   mount,
   unmount,

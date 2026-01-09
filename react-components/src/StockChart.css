@@ -1,0 +1,19 @@
+* {
+  box-sizing: border-box;
+}
+
+.candlestick-chart-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  padding: 10px;
+}
+
+/* Let Highstock handle all styling naturally */
+.candlestick-chart-container > div {
+  height: 100%;
+  width: 100%;
+}

@@ -661,7 +661,7 @@
             "portletConfig":{
               "amiPanelId":"Div5",
               "amiStyle":{"pt":"LAYOUT_DEFAULT"},
-              "child1":"Html5",
+              "child1":"Div8",
               "child2":"Html4",
               "dir":"v",
               "locked":false,
@@ -688,11 +688,37 @@
               "amiPanelId":"Div7",
               "amiStyle":{"pt":"LAYOUT_DEFAULT"},
               "child1":"Html6",
-              "child2":"Html7",
+              "child2":"Div9",
               "dir":"v",
               "locked":false,
               "offset":0.45322,
               "upid":"Div7"
+            }
+          },
+          {
+            "portletBuilderId":"div",
+            "portletConfig":{
+              "amiPanelId":"Div8",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "child1":"Html5",
+              "child2":"Html8",
+              "dir":"v",
+              "locked":false,
+              "offset":0.71181,
+              "upid":"Div8"
+            }
+          },
+          {
+            "portletBuilderId":"div",
+            "portletConfig":{
+              "amiPanelId":"Div9",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "child1":"Html7",
+              "child2":"Html9",
+              "dir":"v",
+              "locked":false,
+              "offset":0.79381,
+              "upid":"Div9"
             }
           },
           {
@@ -795,7 +821,7 @@
                   }
                 ]
               },
-              "htmlTemplate2":"<div id=\"gridApp1\" style=\"height: 500px; width: 500px;\"></div>",
+              "htmlTemplate2":"<div id=\"gridApp1\" style=\"height: 100%; width: 100%;\"></div>",
               "snap":20,
               "upid":"Html4"
             }
@@ -817,7 +843,7 @@
                       "myItems.add(\"Elderberry\");\n",
                       "\n",
                       "\n",
-                      "__ReactGui.mountComponent(\"reactApp1\", \"HelloWorld\", {\"userName\": session.getUsername(), \"message\": \"TEST EDIT MESSAGE\", \n",
+                      "__ReactGui.mountComponent(\"reactApp1\", \"HelloWorld\", {\"userName\": session.getUsername(), \"message\": \"React Component Example\", \n",
                       "  \"forgeItems\": myItems,\n",
                       "  \"elementId\": \"reactApp1\"\n",
                       "});\n",
@@ -845,7 +871,7 @@
                   }
                 ]
               },
-              "htmlTemplate2":"<div id=\"reactApp1\"></div>",
+              "htmlTemplate2":"<div id=\"reactApp1\" style=\"width: 100%; height: 100%\"></div>",
               "snap":20,
               "upid":"Html5"
             }
@@ -944,7 +970,15 @@
                       "if(action == \"rowClicked\") {\n",
                       "  String trader = params.get(0)[\"trader\"];\n",
                       "  string desk = params.get(0)[\"desk\"];\n",
+                      "  String total_pnl = params.get(0)[\"total_pnl\"];\n",
+                      "  String trade_count = params.get(0)[\"trade_count\"];\n",
                       "  selectedRow2.setValue(\"Trader: \" + trader + \" Desk: \" + desk);\n",
+                      "  __ReactGui.mountComponent(\"trader-details\", \"TraderDetailsCard\", {\n",
+                      "    \"trader\": trader,\n",
+                      "    \"desk\": desk,\n",
+                      "    \"total_pnl\": total_pnl,\n",
+                      "    \"trade_count\": trade_count\n",
+                      "  });\n",
                       "}"
                     ],
                     "linkedVariables":[
@@ -954,9 +988,47 @@
                   }
                 ]
               },
-              "htmlTemplate2":"<div id=\"gridApp2\" style=\"height: 500px; width: 700px;\"></div>",
+              "htmlTemplate2":"<div id=\"gridApp2\" style=\"height: 100%; width: 100%;\"></div>",
               "snap":20,
               "upid":"Html7"
+            }
+          },
+          {
+            "portletBuilderId":"amiform",
+            "portletConfig":{
+              "amiPanelId":"Html8",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "callbacks":{
+                "entries":[
+                  {
+                    "amiscript":"__ReactGui.mountComponent(\"candle-chart\", \"StockChart\", {});",
+                    "linkedVariables":[],
+                    "name":"onVisible"
+                  }
+                ]
+              },
+              "htmlTemplate2":"<div id=\"candle-chart\" style=\"width: 100%; height: 100%\"></div>",
+              "snap":20,
+              "upid":"Html8"
+            }
+          },
+          {
+            "portletBuilderId":"amiform",
+            "portletConfig":{
+              "amiPanelId":"Html9",
+              "amiStyle":{"pt":"LAYOUT_DEFAULT"},
+              "callbacks":{
+                "entries":[
+                  {
+                    "amiscript":"__ReactGui.mountComponent(\"trader-details\", \"TraderDetailsCard\", {});",
+                    "linkedVariables":[],
+                    "name":"onVisible"
+                  }
+                ]
+              },
+              "htmlTemplate2":"<div id=\"trader-details\" style=\"width: 100%; height: 100%\"></div>",
+              "snap":20,
+              "upid":"Html9"
             }
           },
           {

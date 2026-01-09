@@ -11,3 +11,18 @@ declare module '*.css?inline' {
   export default content;
 }
 
+// Global 3forge integration types
+declare global {
+  interface Window {
+    amiJsCallback?: (element: HTMLElement | string, action: string, data: any) => void;
+    ForgeReact?: {
+      mount: (elementId: string, componentName: string, props?: any) => void;
+      unmount: (elementId: string) => void;
+      updateProps: (elementId: string, componentName: string, props: any) => void;
+      components: string[];
+    };
+  }
+}
+
+export {};
+
