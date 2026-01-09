@@ -11,12 +11,16 @@
                 "amiscript":[
                   "agGrid.invokeCallback(\"onVisible\", true);\n",
                   "reactPanel.invokeCallback(\"onVisible\", true);\n",
-                  "agGridWithDm.invokeCallback(\"onVisible\", true);"
+                  "agGridWithDm.invokeCallback(\"onVisible\", true);\n",
+                  "stockChart.invokeCallback(\"onVisible\", true);\n",
+                  "traderDetails.invokeCallback(\"onVisible\", true);"
                 ],
                 "linkedVariables":[
                   {"ari":"PANEL:Html4","varName":"agGrid"},
                   {"ari":"PANEL:Html7","varName":"agGridWithDm"},
-                  {"ari":"PANEL:Html5","varName":"reactPanel"}
+                  {"ari":"PANEL:Html5","varName":"reactPanel"},
+                  {"ari":"PANEL:Html8","varName":"stockChart"},
+                  {"ari":"PANEL:Html9","varName":"traderDetails"}
                 ],
                 "name":"onUserPrefsLoaded"
               }
@@ -665,7 +669,7 @@
               "child2":"Html4",
               "dir":"v",
               "locked":false,
-              "offset":0.45377,
+              "offset":0.64778,
               "upid":"Div5"
             }
           },
@@ -691,7 +695,7 @@
               "child2":"Div9",
               "dir":"v",
               "locked":false,
-              "offset":0.45322,
+              "offset":0.33398,
               "upid":"Div7"
             }
           },
@@ -704,7 +708,7 @@
               "child2":"Html8",
               "dir":"v",
               "locked":false,
-              "offset":0.71181,
+              "offset":0.38104,
               "upid":"Div8"
             }
           },
@@ -717,7 +721,7 @@
               "child2":"Html9",
               "dir":"v",
               "locked":false,
-              "offset":0.79381,
+              "offset":0.67502,
               "upid":"Div9"
             }
           },
@@ -1073,7 +1077,7 @@
               "innerMinWidth":838,
               "innerWidth":838,
               "left":0.0,
-              "top":143.0,
+              "top":839.0,
               "upid":"Scroll1",
               "valign":3
             }
